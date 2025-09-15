@@ -1,0 +1,6 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ensure body full height dark background even if tailwind fails to load */
+html, body, #root { height: 100%; }
