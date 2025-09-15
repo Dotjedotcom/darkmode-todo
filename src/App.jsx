@@ -150,13 +150,25 @@ function TodoInner() {
   }
 
   async function shareList() {
-    const body = todos.filter(t => !t.completed).map(t => `• ${t.text}`).join("\n") || "(no incomplete items)";
+    const incomplete = todos.filter(t => !t.completed);
+    const completed = todos.filter(t => t.completed);
+    const header = `Todo List (${incomplete.length} open, ${completed.length} done)`;
+    const bodyOpen = incomplete.map(t => `• ${t.text}`).join("\n") || "(no open items)";
+    const bodyDone = completed.length ? "\n\nCompleted:\n" + completed.map(t => `✓ ${t.text}`).join("\n") : "";
+    const text = header + "\n\n" + bodyOpen + bodyDone;
+    const shareData = {
+      title: "My Todo List",
+      text,
+    };
+    if (typeof window !== "undefined" && window.location) {
+      shareData.url = window.location.href;
+    }
     try {
       if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
-        await navigator.share({ title: "Todo – Incomplete", text: body });
+        await navigator.share(shareData);
         setInfoMsg("Shared.");
       } else if (navigator?.clipboard?.writeText) {
-        await navigator.clipboard.writeText(body);
+        await navigator.clipboard.writeText(text);
         setInfoMsg("Copied to clipboard.");
       } else {
         setInfoMsg("Sharing not supported.");
@@ -189,12 +201,12 @@ function TodoInner() {
       </div>
       <ul className="w-full max-w-xl space-y-2">
         {sortedTodos.map(todo => (
-          <li key={todo.id} className={\`flex items-center gap-2 p-3 rounded-xl border \${todo.completed ? "bg-gray-800/40 opacity-60" : "bg-gray-800"}\`}>
+          <li key={todo.id} className={`flex items-center gap-2 p-3 rounded-xl border \${todo.completed ? "bg-gray-800/40 opacity-60" : "bg-gray-800"}`}>
             <button onClick={() => toggleTodo(todo.id)} className="h-5 w-5 border border-gray-500 flex items-center justify-center">{todo.completed ? "✓" : ""}</button>
             {editId === todo.id ? (
               <input ref={editInputRef} className="flex-1 bg-gray-900 border border-gray-700" value={editText} onChange={e => setEditText(e.target.value)} onBlur={commitEdit} onKeyDown={e => e.key === "Enter" ? commitEdit() : e.key === "Escape" && setEditId(null)} />
             ) : (
-              <span className={\`flex-1 \${todo.completed ? "line-through text-gray-500" : "cursor-text"}\`} onDoubleClick={() => beginEdit(todo.id)}>{todo.text}</span>
+              <span className={`flex-1 \${todo.completed ? "line-through text-gray-500" : "cursor-text"}`} onDoubleClick={() => beginEdit(todo.id)}>{todo.text}</span>
             )}
             <button onClick={() => !todo.completed && beginEdit(todo.id)} disabled={todo.completed} className="px-2">Edit</button>
             <button onClick={() => !todo.completed && deleteTodo(todo.id)} disabled={todo.completed} className="px-2 text-red-300">✖</button>

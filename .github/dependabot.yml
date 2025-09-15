@@ -1,0 +1,20 @@
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    groups:
+      vite-and-plugins:
+        patterns:
+          - "vite*"
+          - "@vitejs/*"
+      react-and-ecosystem:
+        patterns:
+          - "react*"
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+
