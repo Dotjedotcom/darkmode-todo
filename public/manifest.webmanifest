@@ -1,0 +1,21 @@
+{
+  "name": "Darkmode Todos",
+  "short_name": "Todos",
+  "description": "A simple dark mode todo app with categories, due dates, filters and sharing.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui", "browser"],
+  "background_color": "#0b0f19",
+  "theme_color": "#0b0f19",
+  "icons": [
+    { "src": "/icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "/icons/maskable.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Add Task", "short_name": "Add", "url": "/#add" },
+    { "name": "Active Tasks", "short_name": "Active", "url": "/#active" }
+  ],
+  "categories": ["productivity"]
+}
+
