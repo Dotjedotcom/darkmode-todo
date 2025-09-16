@@ -1543,7 +1543,7 @@ function TodoInner() {
             </li>
           );
         })}
-        {sortedTodos.length === 0 && <li className="text-center text-gray-400 bg-gray-800 border border-gray-700 rounded-xl p-5 w-full"><img src="/android-chrome-512x512.png" alt="DarkTodos" className="h-10 w-10 inline-block align-middle" /> No todos yet 😢</li>}
+        {sortedTodos.length === 0 && <li className="text-center text-gray-400 bg-gray-800 border border-gray-700 rounded-xl p-5 w-full"><img src="/android-chrome-512x512.png" alt="DarkTodos" className="h-10 w-10 inline-block align-middle" /> No todos yet <img src="/android-chrome-512x512.png" alt="DarkTodos" className="h-10 w-10 inline-block align-middle" /></li>}
       </ul>
       {errorMsg && (
         <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-red-900 px-4 py-2 rounded border border-red-700">
