@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Todo horns maskable icon">
+  <defs>
+    <linearGradient id="ring" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ef4444"/>
+      <stop offset="1" stop-color="#a21caf"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="96" fill="#0b0f19"/>
+  <rect x="8" y="8" width="496" height="496" rx="92" fill="none" stroke="url(#ring)" stroke-width="12"/>
+  <path d="M156 112c-28 22-48 62-50 104 32-16 76-28 120-32-12-28-36-58-70-72z" fill="#ef4444"/>
+  <path d="M356 112c28 22 48 62 50 104-32-16-76-28-120-32 12-28 36-58 70-72z" fill="#ef4444"/>
+  <rect x="116" y="248" width="280" height="140" rx="40" fill="#111827" stroke="#374151" stroke-width="12"/>
+  <path d="M176 320l44 44 120-120" fill="none" stroke="#22c55e" stroke-width="28" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
+

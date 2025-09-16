@@ -4,13 +4,21 @@ const CORE_URLS = ['/', '/index.html', '/manifest.webmanifest'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(CORE_URLS)).then(() => self.skipWaiting())
+    caches
+      .open(CACHE_NAME)
+      .then((cache) => cache.addAll(CORE_URLS))
+      .then(() => self.skipWaiting()),
   );
 });
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((keys) => Promise.all(keys.map((k) => (k === CACHE_NAME ? undefined : caches.delete(k))))).then(() => self.clients.claim())
+    caches
+      .keys()
+      .then((keys) =>
+        Promise.all(keys.map((k) => (k === CACHE_NAME ? undefined : caches.delete(k)))),
+      )
+      .then(() => self.clients.claim()),
   );
 });
 
@@ -28,7 +36,7 @@ self.addEventListener('fetch', (event) => {
           caches.open(CACHE_NAME).then((cache) => cache.put('/index.html', copy));
           return res;
         })
-        .catch(() => caches.match('/index.html'))
+        .catch(() => caches.match('/index.html')),
     );
     return;
   }
@@ -37,13 +45,14 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       caches.match(req).then((cached) => {
         if (cached) return cached;
-        return fetch(req).then((res) => {
-          const resCopy = res.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(req, resCopy));
-          return res;
-        }).catch(() => cached);
-      })
+        return fetch(req)
+          .then((res) => {
+            const resCopy = res.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(req, resCopy));
+            return res;
+          })
+          .catch(() => cached);
+      }),
     );
   }
 });
-
