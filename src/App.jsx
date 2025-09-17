@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import PropTypes from 'prop-types';
 
 // ErrorBoundary catches unexpected runtime errors and shows a fallback UI.
 class ErrorBoundary extends React.Component {
@@ -33,6 +34,10 @@ class ErrorBoundary extends React.Component {
   }
 }
 
+ErrorBoundary.propTypes = {
+  children: PropTypes.node,
+};
+
 export default function TodoApp() {
   return (
     <ErrorBoundary>
@@ -45,7 +50,6 @@ function TodoInner() {
   const [storage, setStorage] = useState(null);
   const [todos, setTodos] = useState([]);
   const [newTodo, setNewTodo] = useState('');
-  const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
   const [infoMsg, setInfoMsg] = useState('');
   const [editId, setEditId] = useState(null);
@@ -296,6 +300,11 @@ function TodoInner() {
         return null;
     }
   }
+  
+  Icon.propTypes = {
+    name: PropTypes.string.isRequired,
+    className: PropTypes.string,
+  };
 
   // Initialize storage safely.
   useEffect(() => {
@@ -307,8 +316,6 @@ function TodoInner() {
       } catch (e) {
         console.error('Storage init failed', e);
         setErrorMsg('Storage initialization failed.');
-      } finally {
-        setLoading(false);
       }
     })();
   }, []);
@@ -349,7 +356,9 @@ function TodoInner() {
 
   // initialize default due value once on mount
   useEffect(() => {
-    setNewDue(defaultDateLocal());
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    setNewDue(toLocalDateInput(d.getTime()));
   }, []);
 
   async function addTodo() {
@@ -755,7 +764,7 @@ function TodoInner() {
       setEditPrioIndex(map[editPriority] ?? 1);
       setTimeout(() => { try { editPrioListRef.current?.focus(); } catch {} }, 0);
     }
-  }, [editPopover]);
+  }, [editPopover, editPriority]);
 
   useEffect(() => {
     if (!editPopover) {
@@ -1282,7 +1291,7 @@ function TodoInner() {
         </div>
       )}
 
-      <div class="h-[calc(100vh-20rem)] w-full max-w-3xl overflow-y-auto overflow-x-hidden">
+      <div className="h-[calc(100vh-20rem)] w-full max-w-3xl overflow-y-auto overflow-x-hidden">
         <ul id="list" className="space-y-2">
           {sortedTodos.map((todo) => {
             const overdue = !!todo.dueAt && !todo.completed && todo.dueAt < Date.now();

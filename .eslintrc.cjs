@@ -26,12 +26,20 @@ module.exports = {
   rules: {
     // React 17+ with JSX transform doesn't require React in scope
     'react/react-in-jsx-scope': 'off',
+    // Allow intentional empty catch blocks used for no-op fallbacks
+    'no-empty': ['error', { allowEmptyCatch: true }],
   },
   overrides: [
     {
-      files: ['*.config.js', '*.cjs'],
+      files: ['*.cjs'],
       env: { node: true },
       parserOptions: { sourceType: 'script' },
+    },
+    {
+      // ESM-based config files in this project
+      files: ['vite.config.js', 'postcss.config.js', 'tailwind.config.js', '*.config.mjs'],
+      env: { node: true },
+      parserOptions: { sourceType: 'module' },
     },
   ],
 };
