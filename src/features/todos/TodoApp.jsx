@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import Icon from '@/components/Icon.jsx';
 import HeaderBar from './components/HeaderBar.jsx';
 import AddTodoForm from './components/AddTodoForm.jsx';
 import TodoFilters from './components/TodoFilters.jsx';
@@ -6,6 +7,12 @@ import TodoUtilities from './components/TodoUtilities.jsx';
 import TodoList from './components/TodoList.jsx';
 import ConfirmDialog from './components/ConfirmDialog.jsx';
 import InfoDialog from './components/InfoDialog.jsx';
+import {
+  subscribeToServiceWorkerUpdate,
+  applyServiceWorkerUpdate,
+  subscribeToInstallPrompt,
+  triggerInstallPrompt,
+} from '@/services/serviceWorker.js';
 import { useTodoStore, useTodos, usePendingCount, useStorageReady } from './store/useTodoStore.js';
 import { DEFAULT_CATEGORIES } from '../../utils/category.js';
 
@@ -48,6 +55,11 @@ export default function TodoApp() {
   const [showAdvanced, setShowAdvanced] = useState(true);
   const [busyAction, setBusyAction] = useState(null);
   const fileInputRef = useRef(null);
+  const utilitiesToggleRef = useRef(null);
+  const utilitiesPanelRef = useRef(null);
+  const [updateRegistration, setUpdateRegistration] = useState(null);
+  const [showUpdateToast, setShowUpdateToast] = useState(false);
+  const [installAvailable, setInstallAvailable] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -88,7 +100,43 @@ export default function TodoApp() {
     } catch (error) {
       console.warn('Failed to persist utilities flag', error);
     }
+  }, [showUtilities, utilitiesPanelRef, utilitiesToggleRef]);
+
+  useEffect(() => {
+    if (!showUtilities) return undefined;
+
+    const handleClick = (event) => {
+      if (utilitiesToggleRef.current?.contains(event.target)) return;
+      if (utilitiesPanelRef.current?.contains(event.target)) return;
+      setShowUtilities(false);
+    };
+    const handleKey = (event) => {
+      if (event.key === 'Escape') setShowUtilities(false);
+    };
+
+    document.addEventListener('mousedown', handleClick);
+    document.addEventListener('keydown', handleKey);
+    return () => {
+      document.removeEventListener('mousedown', handleClick);
+      document.removeEventListener('keydown', handleKey);
+    };
   }, [showUtilities]);
+
+  useEffect(() => {
+    const unsubscribe = subscribeToServiceWorkerUpdate((registration) => {
+      if (!registration) return;
+      setUpdateRegistration(registration);
+      setShowUpdateToast(true);
+    });
+    return unsubscribe;
+  }, []);
+
+  useEffect(() => {
+    const unsubscribe = subscribeToInstallPrompt((available) => {
+      setInstallAvailable(available);
+    });
+    return unsubscribe;
+  }, []);
 
   useEffect(() => {
     try {
@@ -155,6 +203,20 @@ export default function TodoApp() {
     } finally {
       setBusyAction((current) => (current === kind ? null : current));
     }
+  }
+
+  async function handleInstallApp() {
+    const accepted = await triggerInstallPrompt();
+    if (accepted) {
+      setInfoMsg('App install started.');
+    }
+  }
+
+  function handleApplyUpdate() {
+    if (!updateRegistration) return;
+    applyServiceWorkerUpdate(updateRegistration);
+    setShowUpdateToast(false);
+    setUpdateRegistration(null);
   }
 
   async function handleAddTodo({ text, category, dueInput, priority }) {
@@ -441,6 +503,10 @@ export default function TodoApp() {
         replaceOnImport={replaceOnImport}
         onReplaceOnImportChange={setReplaceOnImport}
         onShowInfo={setInfoKind}
+        canInstall={installAvailable}
+        onInstallApp={handleInstallApp}
+        updateAvailable={!!updateRegistration}
+        onUpdateApp={handleApplyUpdate}
       />
       {!storageReady && (
         <div className="w-full max-w-3xl mb-3 px-4 py-2 rounded-xl border border-gray-800 bg-gray-800/70 text-sm text-gray-300" role="status">
@@ -459,6 +525,7 @@ export default function TodoApp() {
         onToggleAdvanced={() => setShowAdvanced((value) => !value)}
         showUtilities={showUtilities}
         onToggleUtilities={() => setShowUtilities((value) => !value)}
+        utilitiesButtonRef={utilitiesToggleRef}
         disabled={interactionsDisabled}
         busyAction={busyAction}
       />
@@ -477,10 +544,12 @@ export default function TodoApp() {
         />
       </div>
       <TodoUtilities
+        ref={utilitiesPanelRef}
         visible={showUtilities}
         totalCount={totalCount}
         completedCount={completedCount}
         onConfirmRequest={setConfirmKind}
+        onDismiss={() => setShowUtilities(false)}
         disabled={interactionsDisabled}
         busyAction={busyAction}
       />
@@ -494,6 +563,30 @@ export default function TodoApp() {
         disabled={interactionsDisabled}
         busyAction={busyAction}
       />
+      {showUpdateToast && (
+        <div className="fixed bottom-24 right-4 z-40">
+          <div className="flex items-center gap-3 rounded-xl border border-blue-700 bg-gray-900/95 px-4 py-3 text-sm text-gray-100 shadow-2xl">
+            <div className="flex items-center gap-2">
+              <Icon name="info" className="h-4 w-4 text-blue-300" />
+              <span>New version available.</span>
+            </div>
+            <button
+              type="button"
+              onClick={handleApplyUpdate}
+              className="rounded-lg bg-blue-600 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-white hover:bg-blue-500"
+            >
+              Refresh now
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowUpdateToast(false)}
+              className="text-xs text-gray-400 hover:text-gray-200"
+            >
+              Dismiss
+            </button>
+          </div>
+        </div>
+      )}
       {errorMsg && (
         <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-red-900 px-4 py-2 rounded border border-red-700">
           {errorMsg}

@@ -13,6 +13,10 @@ export default function HeaderBar({
   replaceOnImport,
   onReplaceOnImportChange,
   onShowInfo,
+  canInstall,
+  onInstallApp,
+  updateAvailable,
+  onUpdateApp,
 }) {
   const [showShareMenu, setShowShareMenu] = useState(false);
   const [showHelpMenu, setShowHelpMenu] = useState(false);
@@ -115,6 +119,28 @@ export default function HeaderBar({
         )}
       </div>
       <div className="flex items-center gap-2">
+        {updateAvailable && (
+          <button
+            onClick={onUpdateApp}
+            className="px-3 py-1 rounded bg-blue-900 border border-blue-600 flex items-center gap-2 text-sm text-blue-100 hover:border-blue-400"
+            title="Reload to update"
+            type="button"
+          >
+            <Icon name="info" className="h-3.5 w-3.5" />
+            Update ready
+          </button>
+        )}
+        {canInstall && (
+          <button
+            onClick={onInstallApp}
+            className="px-3 py-1 rounded bg-blue-600 border border-blue-500 flex items-center gap-2 text-sm text-white hover:bg-blue-500"
+            title="Install app"
+            type="button"
+          >
+            <Icon name="download" className="h-3.5 w-3.5" />
+            Install
+          </button>
+        )}
         <div className="relative" ref={shareMenuRef}>
           <button
             onClick={() => setShowShareMenu((value) => !value)}
@@ -224,4 +250,15 @@ HeaderBar.propTypes = {
   replaceOnImport: PropTypes.bool.isRequired,
   onReplaceOnImportChange: PropTypes.func.isRequired,
   onShowInfo: PropTypes.func.isRequired,
+  canInstall: PropTypes.bool,
+  onInstallApp: PropTypes.func,
+  updateAvailable: PropTypes.bool,
+  onUpdateApp: PropTypes.func,
+};
+
+HeaderBar.defaultProps = {
+  canInstall: false,
+  onInstallApp: undefined,
+  updateAvailable: false,
+  onUpdateApp: undefined,
 };

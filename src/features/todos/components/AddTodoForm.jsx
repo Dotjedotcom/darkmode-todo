@@ -16,6 +16,7 @@ export default function AddTodoForm({
   onToggleAdvanced,
   showUtilities,
   onToggleUtilities,
+  utilitiesButtonRef,
   disabled = false,
   busyAction = null,
 }) {
@@ -100,8 +101,10 @@ export default function AddTodoForm({
         {isBusy && <span className="text-sm">Saving…</span>}
       </button>
       <button
+        ref={utilitiesButtonRef}
         onClick={onToggleUtilities}
         aria-pressed={showUtilities}
+        aria-expanded={showUtilities}
         className={`px-3 py-2 rounded-xl border flex items-center gap-2 ${showUtilities ? 'bg-gray-800 border-gray-700' : 'bg-gray-900 border-gray-800'}`}
         title={showUtilities ? 'Hide utilities' : 'Show utilities'}
         disabled={disabled}
@@ -133,6 +136,7 @@ AddTodoForm.propTypes = {
   onToggleAdvanced: PropTypes.func.isRequired,
   showUtilities: PropTypes.bool.isRequired,
   onToggleUtilities: PropTypes.func.isRequired,
+  utilitiesButtonRef: PropTypes.shape({ current: PropTypes.any }),
   disabled: PropTypes.bool,
   busyAction: PropTypes.string,
 };
@@ -140,4 +144,5 @@ AddTodoForm.propTypes = {
 AddTodoForm.defaultProps = {
   disabled: false,
   busyAction: null,
+  utilitiesButtonRef: undefined,
 };

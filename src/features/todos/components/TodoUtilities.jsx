@@ -1,14 +1,19 @@
+import { forwardRef } from 'react';
 import PropTypes from 'prop-types';
 import Icon from '../../../components/Icon.jsx';
 
-export default function TodoUtilities({
-  visible,
-  totalCount,
-  completedCount,
-  onConfirmRequest,
-  disabled = false,
-  busyAction = null,
-}) {
+const TodoUtilities = forwardRef(function TodoUtilities(
+  {
+    visible,
+    totalCount,
+    completedCount,
+    onConfirmRequest,
+    onDismiss,
+    disabled = false,
+    busyAction = null,
+  },
+  ref,
+) {
   if (!visible) return null;
 
   const isToggleAll = busyAction === 'toggleAll';
@@ -16,13 +21,27 @@ export default function TodoUtilities({
   const isClearingAll = busyAction === 'clearAll';
   const pendingCount = Math.max(0, totalCount - completedCount);
 
+  const handleDismiss = () => {
+    if (typeof onDismiss === 'function') {
+      onDismiss();
+    }
+  };
+
   return (
-    <div id="utility" className="grid w-full max-w-3xl gap-3 md:grid-cols-3" aria-busy={busyAction ? 'true' : 'false'}>
+    <div
+      ref={ref}
+      id="utility"
+      className="grid w-full max-w-3xl gap-3 grid-cols-3"
+      aria-busy={busyAction ? 'true' : 'false'}
+    >
       <UtilityButton
         icon="toggle"
         label="Toggle all"
         description="Flip every todo between done and pending"
-        onClick={() => onConfirmRequest('toggleAll')}
+        onClick={() => {
+          onConfirmRequest('toggleAll');
+          handleDismiss();
+        }}
         disabled={disabled}
         busy={isToggleAll}
       />
@@ -30,7 +49,10 @@ export default function TodoUtilities({
         icon="broom"
         label="Clear completed"
         description="Remove finished todos"
-        onClick={() => onConfirmRequest('clearCompleted')}
+        onClick={() => {
+          onConfirmRequest('clearCompleted');
+          handleDismiss();
+        }}
         disabled={disabled || completedCount === 0}
         busy={isClearingCompleted}
       />
@@ -38,14 +60,18 @@ export default function TodoUtilities({
         icon="trash"
         label="Clear all"
         description="Start with an empty list"
-        onClick={() => onConfirmRequest('clearAll')}
+        onClick={() => {
+          onConfirmRequest('clearAll');
+          handleDismiss();
+        }}
         disabled={disabled || totalCount === 0}
         busy={isClearingAll}
       />
-      <SummaryCard total={totalCount} pending={pendingCount} completed={completedCount} />
     </div>
   );
-}
+});
+
+export default TodoUtilities;
 
 function UtilityButton({ icon, label, description, onClick, disabled, busy }) {
   return (
@@ -106,11 +132,13 @@ TodoUtilities.propTypes = {
   totalCount: PropTypes.number.isRequired,
   completedCount: PropTypes.number.isRequired,
   onConfirmRequest: PropTypes.func.isRequired,
+  onDismiss: PropTypes.func,
   disabled: PropTypes.bool,
   busyAction: PropTypes.string,
 };
 
 TodoUtilities.defaultProps = {
+  onDismiss: undefined,
   disabled: false,
   busyAction: null,
 };

@@ -4,41 +4,11 @@ import Icon from '../../../components/Icon.jsx';
 import { fuzzyFilter } from '../../../utils/fuzzy.js';
 import { priorityLabel } from '../../../utils/priority.js';
 import { categoryIcon } from '../../../utils/category.js';
+import useAnchoredPosition from '../../../hooks/useAnchoredPosition.js';
 
 const PRIORITY_OPTIONS = ['low', 'normal', 'high'];
 
 function usePopover(open, setOpen, containerRef) {
-
-function useAnchoredPosition(open, anchorRef, popoverRef, width, deps = []) {
-  const [style, setStyle] = useState({ top: 0, left: 0, width });
-  useEffect(() => {
-    if (!open) return undefined;
-    const update = () => {
-      const anchor = anchorRef.current;
-      if (!anchor) return;
-      const rect = anchor.getBoundingClientRect();
-      const popoverHeight = popoverRef.current?.offsetHeight ?? 240;
-      let top = rect.bottom + 8;
-      if (top + popoverHeight > window.innerHeight - 8) {
-        top = Math.max(8, rect.top - popoverHeight - 8);
-      }
-      let left = rect.left + rect.width / 2 - width / 2;
-      left = Math.min(Math.max(left, 8), window.innerWidth - width - 8);
-      setStyle({ top: top + window.scrollY, left: left + window.scrollX, width });
-    };
-    const frame = requestAnimationFrame(update);
-    const timer = setTimeout(update, 50);
-    window.addEventListener('resize', update);
-    window.addEventListener('scroll', update, true);
-    return () => {
-      cancelAnimationFrame(frame);
-      clearTimeout(timer);
-      window.removeEventListener('resize', update);
-      window.removeEventListener('scroll', update, true);
-    };
-  }, [open, anchorRef, popoverRef, width, ...deps]);
-  return style;
-}
   useEffect(() => {
     if (!open) return undefined;
     const handleClick = (event) => {
@@ -59,6 +29,8 @@ function useAnchoredPosition(open, anchorRef, popoverRef, width, deps = []) {
 
 export function CategoryPopoverButton({ value, onChange, options, disabled }) {
   const containerRef = useRef(null);
+  const anchorRef = useRef(null);
+  const popoverRef = useRef(null);
   const [open, setOpen] = useState(false);
   const [inputValue, setInputValue] = useState(value || '');
   const [highlight, setHighlight] = useState(0);
@@ -68,6 +40,10 @@ export function CategoryPopoverButton({ value, onChange, options, disabled }) {
   }, [value]);
 
   usePopover(open, setOpen, containerRef);
+  const popoverStyle = useAnchoredPosition(open, anchorRef, popoverRef, {
+    width: 256,
+    deps: [inputValue, options.length],
+  });
 
   const suggestionList = useMemo(() => fuzzyFilter(options, inputValue).slice(0, 8), [options, inputValue]);
 
@@ -81,6 +57,7 @@ export function CategoryPopoverButton({ value, onChange, options, disabled }) {
     <div className="relative" ref={containerRef}>
       <button
         type="button"
+        ref={anchorRef}
         onClick={() => !disabled && setOpen((v) => !v)}
         className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition-colors ${disabled ? 'border-gray-700 text-gray-500 cursor-not-allowed opacity-60' : 'border-gray-700 hover:border-gray-500 text-gray-200 bg-gray-800'}`}
         disabled={disabled}
@@ -91,7 +68,11 @@ export function CategoryPopoverButton({ value, onChange, options, disabled }) {
         </span>
       </button>
       {open && !disabled && (
-        <div className="absolute z-50 mt-2 w-64 rounded-lg border border-gray-700 bg-gray-900 p-3 shadow-xl">
+        <div
+          ref={popoverRef}
+          style={popoverStyle ?? { visibility: 'hidden' }}
+          className="fixed z-50 rounded-lg border border-gray-700 bg-gray-900 p-3 shadow-xl"
+        >
           <input
             className="w-full rounded border border-gray-700 bg-gray-800 p-2 text-sm text-gray-100"
             placeholder="Category"
@@ -158,14 +139,18 @@ CategoryPopoverButton.defaultProps = {
 
 export function DatePopoverButton({ value, onChange, disabled }) {
   const containerRef = useRef(null);
+  const anchorRef = useRef(null);
+  const popoverRef = useRef(null);
   const [open, setOpen] = useState(false);
 
   usePopover(open, setOpen, containerRef);
+  const popoverStyle = useAnchoredPosition(open, anchorRef, popoverRef, { width: 224, deps: [value] });
 
   return (
     <div className="relative" ref={containerRef}>
       <button
         type="button"
+        ref={anchorRef}
         onClick={() => !disabled && setOpen((v) => !v)}
         className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition-colors ${disabled ? 'border-gray-700 text-gray-500 cursor-not-allowed opacity-60' : 'border-gray-700 hover:border-gray-500 text-gray-200 bg-gray-800'}`}
         disabled={disabled}
@@ -173,7 +158,11 @@ export function DatePopoverButton({ value, onChange, disabled }) {
         <Icon name="calendar" />
       </button>
       {open && !disabled && (
-        <div className="absolute z-50 mt-2 w-56 rounded-lg border border-gray-700 bg-gray-900 p-3 shadow-xl">
+        <div
+          ref={popoverRef}
+          style={popoverStyle ?? { visibility: 'hidden' }}
+          className="fixed z-50 rounded-lg border border-gray-700 bg-gray-900 p-3 shadow-xl"
+        >
           <input
             type="date"
             className="w-full rounded border border-gray-700 bg-gray-800 p-2 text-sm text-gray-100"
@@ -222,15 +211,19 @@ DatePopoverButton.defaultProps = {
 
 export function PriorityPopoverButton({ value, onChange, disabled }) {
   const containerRef = useRef(null);
+  const anchorRef = useRef(null);
+  const popoverRef = useRef(null);
   const [open, setOpen] = useState(false);
   const current = value || 'normal';
 
   usePopover(open, setOpen, containerRef);
+  const popoverStyle = useAnchoredPosition(open, anchorRef, popoverRef, { width: 192, deps: [current] });
 
   return (
     <div className="relative" ref={containerRef}>
       <button
         type="button"
+        ref={anchorRef}
         onClick={() => !disabled && setOpen((v) => !v)}
         className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition-colors ${disabled ? 'border-gray-700 text-gray-500 cursor-not-allowed opacity-60' : 'border-gray-700 hover:border-gray-500 text-gray-200 bg-gray-800'}`}
         disabled={disabled}
@@ -238,7 +231,11 @@ export function PriorityPopoverButton({ value, onChange, disabled }) {
         <Icon name="flag" />
       </button>
       {open && !disabled && (
-        <div className="absolute z-50 mt-2 w-48 rounded-lg border border-gray-700 bg-gray-900 p-2 shadow-xl">
+        <div
+          ref={popoverRef}
+          style={popoverStyle ?? { visibility: 'hidden' }}
+          className="fixed z-50 rounded-lg border border-gray-700 bg-gray-900 p-2 shadow-xl"
+        >
           {PRIORITY_OPTIONS.map((option) => (
             <button
               key={option}
@@ -264,6 +261,8 @@ export function PriorityPopoverButton({ value, onChange, disabled }) {
 
 export function NotesPopoverButton({ value, onChange, disabled }) {
   const containerRef = useRef(null);
+  const anchorRef = useRef(null);
+  const popoverRef = useRef(null);
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState(value || '');
 
@@ -272,11 +271,13 @@ export function NotesPopoverButton({ value, onChange, disabled }) {
   }, [value]);
 
   usePopover(open, setOpen, containerRef);
+  const popoverStyle = useAnchoredPosition(open, anchorRef, popoverRef, { width: 288, deps: [draft] });
 
   return (
     <div className="relative" ref={containerRef}>
       <button
         type="button"
+        ref={anchorRef}
         onClick={() => !disabled && setOpen((prev) => !prev)}
         className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition-colors ${disabled ? 'border-gray-700 text-gray-500 cursor-not-allowed opacity-60' : 'border-gray-700 hover:border-gray-500 text-gray-200 bg-gray-800'}`}
         disabled={disabled}
@@ -284,7 +285,11 @@ export function NotesPopoverButton({ value, onChange, disabled }) {
         <Icon name="notes" />
       </button>
       {open && !disabled && (
-        <div className="absolute z-50 mt-2 w-72 rounded-lg border border-gray-700 bg-gray-900 p-3 shadow-xl">
+        <div
+          ref={popoverRef}
+          style={popoverStyle ?? { visibility: 'hidden' }}
+          className="fixed z-50 rounded-lg border border-gray-700 bg-gray-900 p-3 shadow-xl"
+        >
           <textarea
             className="h-32 w-full resize-none rounded border border-gray-700 bg-gray-800 p-2 text-sm text-gray-100"
             placeholder="Add additional context…"

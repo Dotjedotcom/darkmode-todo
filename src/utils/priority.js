@@ -10,3 +10,15 @@ export function priorityLabel(priority) {
       return priority || 'Steady';
   }
 }
+
+export function priorityGlyph(priority) {
+  switch (priority) {
+    case 'low':
+      return '🧘';
+    case 'high':
+      return '🔥';
+    case 'normal':
+    default:
+      return '⚖️';
+  }
+}

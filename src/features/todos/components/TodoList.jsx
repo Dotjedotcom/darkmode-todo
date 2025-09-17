@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import Icon from '../../../components/Icon.jsx';
-import { priorityLabel } from '../../../utils/priority.js';
+import { priorityLabel, priorityGlyph } from '../../../utils/priority.js';
 import { categoryPillClass, categoryIcon } from '../../../utils/category.js';
 import { toLocalDateInput } from '../../../utils/date.js';
 import {
@@ -49,7 +49,6 @@ export default function TodoList({
     }
   }, [editingId]);
 
-
   function beginEdit(todo) {
     if (disabled || todo.completed) return;
     setEditingId(todo.id);
@@ -60,14 +59,14 @@ export default function TodoList({
     setEditNotes(todo.notes || '');
   }
 
-  function resetEditState() {
+  const resetEditState = useCallback(() => {
     setEditingId(null);
     setEditText('');
     setEditCategory('');
     setEditDue('');
     setEditPriority('normal');
     setEditNotes('');
-  }
+  }, []);
 
   async function commitEdit() {
     if (editingId == null) return;
@@ -89,9 +88,21 @@ export default function TodoList({
     }
   }
 
-  function cancelEdit() {
+  const cancelEdit = useCallback(() => {
     resetEditState();
-  }
+  }, [resetEditState]);
+
+  useEffect(() => {
+    if (editingId == null) return undefined;
+    const handleDoubleClick = (event) => {
+      const editingNode = document.querySelector('[data-editing="true"]');
+      if (!editingNode) return;
+      if (editingNode.contains(event.target)) return;
+      cancelEdit();
+    };
+    document.addEventListener('dblclick', handleDoubleClick);
+    return () => document.removeEventListener('dblclick', handleDoubleClick);
+  }, [editingId, cancelEdit]);
 
   return (
     <div
@@ -110,6 +121,7 @@ export default function TodoList({
           return (
             <li
               key={todo.id}
+              data-editing={isEditing ? 'true' : undefined}
               className={`group rounded-xl border ${borderClass} bg-gray-800/95 p-3 transition-colors shadow-sm ${
                 todo.completed ? 'opacity-60' : ''
               }`}
@@ -150,47 +162,26 @@ export default function TodoList({
                         {todo.text}
                       </span>
                     )}
-                    <div className="flex items-center gap-2 text-sm">
-                      {isEditing ? (
-                        <>
-                          <button
-                            onClick={disabled ? undefined : commitEdit}
-                            className="rounded bg-green-600 p-2 text-white hover:bg-green-500 disabled:cursor-not-allowed disabled:opacity-60"
-                            disabled={disabled}
-                          >
-                            <Icon name="check" />
-                            <span className="sr-only">Save</span>
-                          </button>
-                          <button
-                            onClick={disabled ? undefined : cancelEdit}
-                            className="rounded bg-red-600 p-2 text-white hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-60"
-                            disabled={disabled}
-                          >
-                            <Icon name="x" />
-                            <span className="sr-only">Cancel</span>
-                          </button>
-                        </>
-                      ) : (
-                        <>
-                          <button
-                            onClick={() => !todo.completed && beginEdit(todo)}
-                            disabled={todo.completed || disabled}
-                            className="px-2 text-gray-400 opacity-0 transition-opacity duration-150 group-hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-30"
-                            title="Edit"
-                          >
-                            <Icon name="edit" />
-                          </button>
-                          <button
-                            onClick={() => !todo.completed && !disabled && onRequestDelete(todo)}
-                            disabled={todo.completed || disabled}
-                            className="px-2 text-red-300 opacity-0 transition-opacity duration-150 group-hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-30"
-                            title="Delete"
-                          >
-                            <Icon name="trash" />
-                          </button>
-                        </>
-                      )}
-                    </div>
+                    {isEditing && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <button
+                          onClick={disabled ? undefined : commitEdit}
+                          className="rounded bg-green-600 p-2 text-white hover:bg-green-500 disabled:cursor-not-allowed disabled:opacity-60"
+                          disabled={disabled}
+                        >
+                          <Icon name="check" />
+                          <span className="sr-only">Save</span>
+                        </button>
+                        <button
+                          onClick={disabled ? undefined : cancelEdit}
+                          className="rounded bg-red-600 p-2 text-white hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-60"
+                          disabled={disabled}
+                        >
+                          <Icon name="x" />
+                          <span className="sr-only">Cancel</span>
+                        </button>
+                      </div>
+                    )}
                   </div>
                   <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-gray-300">
                     {isEditing ? (
@@ -211,25 +202,54 @@ export default function TodoList({
                       </>
                     ) : (
                       <>
-                        <span
-                          className={`flex items-center gap-1 px-2 py-0.5 text-xs rounded-full border ${
-                            todo.category ? categoryPillClass(todo.category) : 'border-gray-700 text-gray-400'
-                          }`}
-                        >
-                          <span>{categoryIcon(todo.category)}</span>
-                          <span>{todo.category || 'Uncategorised'}</span>
-                        </span>
-                        <span
-                          className={`flex items-center gap-1 px-2 py-0.5 rounded-full border ${
-                            overdue ? 'border-red-500 text-red-200' : 'border-gray-700 text-gray-300'
-                          }`}
-                        >
-                          <Icon name="calendar" className="h-3.5 w-3.5" />
-                          {dueLabel}
-                        </span>
-                        <span className={`px-2 py-0.5 rounded-full border ${badgeClass}`}>
-                          {priorityLabel(priorityKey)}
-                        </span>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span
+                            className={`flex h-8 w-8 items-center justify-center rounded-full border ${
+                              todo.category
+                                ? `${categoryPillClass(todo.category)} text-lg`
+                                : 'border-gray-700 bg-gray-800/60 text-gray-400'
+                            }`}
+                            title={todo.category || 'Uncategorised'}
+                            aria-label={todo.category ? `Category ${todo.category}` : 'Uncategorised'}
+                          >
+                            <span className="text-xl leading-none">{categoryIcon(todo.category)}</span>
+                          </span>
+                          <span
+                            className={`flex items-center gap-1 px-2 py-0.5 rounded-full border ${
+                              overdue ? 'border-red-500 text-red-200' : 'border-gray-700 text-gray-300'
+                            }`}
+                          >
+                            <Icon name="calendar" className="h-3.5 w-3.5" />
+                            {dueLabel}
+                          </span>
+                          <span
+                            className={`flex h-8 w-8 items-center justify-center rounded-full border ${badgeClass}`}
+                            title={priorityLabel(priorityKey)}
+                            aria-label={`Priority ${priorityLabel(priorityKey)}`}
+                          >
+                            <span className="text-xl leading-none">{priorityGlyph(priorityKey)}</span>
+                          </span>
+                        </div>
+                        <div className="ml-auto flex items-center gap-1 text-sm">
+                          <button
+                            onClick={() => !todo.completed && beginEdit(todo)}
+                            disabled={todo.completed || disabled}
+                            className="px-2 text-gray-400 opacity-0 transition-opacity duration-150 group-hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-30"
+                            title="Edit"
+                          >
+                            <Icon name="edit" />
+                            <span className="sr-only">Edit</span>
+                          </button>
+                          <button
+                            onClick={() => !todo.completed && !disabled && onRequestDelete(todo)}
+                            disabled={todo.completed || disabled}
+                            className="px-2 text-red-300 opacity-0 transition-opacity duration-150 group-hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-30"
+                            title="Delete"
+                          >
+                            <Icon name="trash" />
+                            <span className="sr-only">Delete</span>
+                          </button>
+                        </div>
                       </>
                     )}
                   </div>
