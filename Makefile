@@ -1,4 +1,4 @@
-.PHONY: docker/build docker/run
+.PHONY: install dev build preview format f ff lint l lf test docker/build docker/run
 
 IMAGE ?= darkmode-todo
 
@@ -14,17 +14,26 @@ build:
 preview:
 	npm run preview
 
-f:
+format:
 	npm run format
+
+f: format
 
 ff:
 	npm run format:fix
 
-l:
+lint:
 	npm run lint
 
+l: lint
+	
 lf:
 	npm run lint:fix
+
+test:
+	npm run test
+
+t: test
 
 docker/build:
 	@# Prefer BuildKit via buildx; otherwise use classic builder (no BuildKit)
