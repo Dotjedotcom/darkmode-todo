@@ -920,7 +920,7 @@ function TodoInner() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-gray-100 flex flex-col items-center p-6">
+    <div className="h-full min-h-screen bg-gray-900 text-gray-100 flex flex-col items-center p-6">
       <h1 className="w-full max-w-3xl text-3xl font-extrabold tracking-tight mb-2">
         <span className="bg-gradient-to-r from-gray-100 to-gray-400 bg-clip-text text-transparent">
           😈 DarkTodos&trade;
@@ -1240,11 +1240,11 @@ function TodoInner() {
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Search"
-                  className="px-2 py-1 rounded bg-gray-800 border border-gray-700 flex-1 min-w-[140px]"
+                  className="px-2 py-1 rounded bg-gray-800 border border-gray-700 xs:flex-0 sm:flex-1"
                 />
               </div>
               <div className="flex items-center gap-2 flex-1">
-                <span className="relative inline-block flex-1 min-w-[140px]">
+                <span className="relative inline-block flex-1 min-w-[100px]">
                   <select
                     value={filterCategory}
                     onChange={(e) => setFilterCategory(e.target.value)}
@@ -1261,7 +1261,7 @@ function TodoInner() {
                     <Icon name="chevron-down" />
                   </span>
                 </span>
-                <span className="relative inline-block flex-1 min-w-[140px]">
+                <span className="relative inline-block flex-1 min-w-[100px]">
                   <select
                     value={sortMode}
                     onChange={(e) => setSortMode(e.target.value)}
@@ -1282,269 +1282,271 @@ function TodoInner() {
         </div>
       )}
 
-      <ul id="list" className="w-full max-w-3xl space-y-2">
-        {sortedTodos.map((todo) => {
-          const overdue = !!todo.dueAt && !todo.completed && todo.dueAt < Date.now();
-          return (
-            <li
-              key={todo.id}
-              className={`group flex flex-col gap-2 p-3 rounded-xl border ${todo.completed ? 'bg-gray-800/40 opacity-60' : 'bg-gray-800'} hover:border-gray-500 transition-colors shadow-sm`}
-            >
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() => toggleTodo(todo.id)}
-                  className="h-5 w-5 border border-gray-500 flex items-center justify-center"
-                >
-                  {todo.completed ? '✓' : ''}
-                </button>
-                {editId === todo.id ? (
-                  <>
-                    <div className="flex flex-1 flex-wrap items-center gap-2">
-                      <input
-                        ref={editInputRef}
-                        className="flex-[1_1_240px] min-w-[160px] bg-gray-900 border border-gray-700 p-1 rounded"
-                        value={editText}
-                        onChange={(e) => setEditText(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Escape' && setEditId(null)}
-                      />
-                    {/* Category popover */}
-                    <span className="relative">
-                        <button
-                          type="button"
-                          onClick={(e) => { setEditPopover((p) => (p === 'cat' ? null : 'cat')); (e && setEditPopoverAnchor(e.currentTarget)); }}
-                          className="shrink-0 p-1 rounded bg-gray-800 border border-gray-700 text-gray-200 hover:border-gray-500"
-                        >
-                          <Icon name="tag" />
-                          <span className="sr-only">Category</span>
-                        </button>
-                        
-                        {editPopover === 'cat' && editPopoverStyle && (
-                          <div
-                            id="edit-popover"
-                            className="fixed z-50 bg-gray-900 border border-gray-700 rounded-md p-2 shadow-xl"
-                            style={{ left: editPopoverStyle.left + 'px', top: editPopoverStyle.top + 'px', width: Math.max(240, editPopoverStyle.width) + 'px' }}
+      <div class="h-[calc(100vh-20rem)] w-full max-w-3xl overflow-y-auto overflow-x-hidden">
+        <ul id="list" className="space-y-2">
+          {sortedTodos.map((todo) => {
+            const overdue = !!todo.dueAt && !todo.completed && todo.dueAt < Date.now();
+            return (
+              <li
+                key={todo.id}
+                className={`group flex flex-col gap-2 p-3 rounded-xl border ${todo.completed ? 'bg-gray-800/40 opacity-60' : 'bg-gray-800'} hover:border-gray-500 transition-colors shadow-sm`}
+              >
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => toggleTodo(todo.id)}
+                    className="h-5 w-5 border border-gray-500 flex items-center justify-center"
+                  >
+                    {todo.completed ? '✓' : ''}
+                  </button>
+                  {editId === todo.id ? (
+                    <>
+                      <div className="flex flex-1 flex-wrap items-center gap-2">
+                        <input
+                          ref={editInputRef}
+                          className="flex-[1_1_240px] min-w-[160px] bg-gray-900 border border-gray-700 p-1 rounded"
+                          value={editText}
+                          onChange={(e) => setEditText(e.target.value)}
+                          onKeyDown={(e) => e.key === 'Escape' && setEditId(null)}
+                        />
+                      {/* Category popover */}
+                      <span className="relative">
+                          <button
+                            type="button"
+                            onClick={(e) => { setEditPopover((p) => (p === 'cat' ? null : 'cat')); (e && setEditPopoverAnchor(e.currentTarget)); }}
+                            className="shrink-0 p-1 rounded bg-gray-800 border border-gray-700 text-gray-200 hover:border-gray-500"
                           >
-                            <input
-                              className="w-full p-2 rounded bg-gray-800 border border-gray-700"
-                              placeholder="Category"
-                              role="combobox"
-                              aria-expanded={true}
-                              aria-controls="editcat-listbox"
-                              aria-activedescendant={`editcat-opt-${editCatIndex}`}
-                              value={editCategory}
-                              ref={editCatInputRef}
-                              onChange={(e) => { setEditCategory(e.target.value); setEditCatIndex(0); }}
-                              onKeyDown={(e) => {
-                                const list = fuzzyFilter(categoryOptions, editCategory);
-                                const max = list.length;
-                                if (e.key === 'ArrowDown' && max) { e.preventDefault(); setEditCatIndex((i) => (i + 1) % max); }
-                                else if (e.key === 'ArrowUp' && max) { e.preventDefault(); setEditCatIndex((i) => (i - 1 + max) % max); }
-                                else if (e.key === 'Enter' && max) {
-                                  const val = list[Math.max(0, Math.min(editCatIndex, max - 1))];
-                                  setEditCategory(val);
-                                  setEditPopover(null);
-                                } else if (e.key === 'Tab' && max) {
-                                  const val = list[Math.max(0, Math.min(editCatIndex, max - 1))];
-                                  setEditCategory(val);
-                                  setEditPopover(null);
-                                } else if (e.key === 'Escape') {
-                                  setEditPopover(null);
-                                }
-                              }}
-                            />
-                            <div id="editcat-listbox" role="listbox" className="mt-2 max-h-48 overflow-auto rounded-md border border-gray-700 bg-gray-900">
-                              {fuzzyFilter(categoryOptions, editCategory).map((c, idx) => (
-                                <div
-                                  id={`editcat-opt-${idx}`}
-                                  role="option"
-                                  aria-selected={idx === editCatIndex}
-                                  key={c}
-                                    className={`px-3 py-2 cursor-pointer ${idx === editCatIndex ? 'bg-gray-800' : 'hover:bg-gray-800'}`}
-                                    onMouseEnter={() => setEditCatIndex(idx)}
-                                    onMouseDown={(e) => { e.preventDefault(); setEditCategory(c); setEditPopover(null); }}
+                            <Icon name="tag" />
+                            <span className="sr-only">Category</span>
+                          </button>
+                          
+                          {editPopover === 'cat' && editPopoverStyle && (
+                            <div
+                              id="edit-popover"
+                              className="fixed z-50 bg-gray-900 border border-gray-700 rounded-md p-2 shadow-xl"
+                              style={{ left: editPopoverStyle.left + 'px', top: editPopoverStyle.top + 'px', width: Math.max(240, editPopoverStyle.width) + 'px' }}
+                            >
+                              <input
+                                className="w-full p-2 rounded bg-gray-800 border border-gray-700"
+                                placeholder="Category"
+                                role="combobox"
+                                aria-expanded={true}
+                                aria-controls="editcat-listbox"
+                                aria-activedescendant={`editcat-opt-${editCatIndex}`}
+                                value={editCategory}
+                                ref={editCatInputRef}
+                                onChange={(e) => { setEditCategory(e.target.value); setEditCatIndex(0); }}
+                                onKeyDown={(e) => {
+                                  const list = fuzzyFilter(categoryOptions, editCategory);
+                                  const max = list.length;
+                                  if (e.key === 'ArrowDown' && max) { e.preventDefault(); setEditCatIndex((i) => (i + 1) % max); }
+                                  else if (e.key === 'ArrowUp' && max) { e.preventDefault(); setEditCatIndex((i) => (i - 1 + max) % max); }
+                                  else if (e.key === 'Enter' && max) {
+                                    const val = list[Math.max(0, Math.min(editCatIndex, max - 1))];
+                                    setEditCategory(val);
+                                    setEditPopover(null);
+                                  } else if (e.key === 'Tab' && max) {
+                                    const val = list[Math.max(0, Math.min(editCatIndex, max - 1))];
+                                    setEditCategory(val);
+                                    setEditPopover(null);
+                                  } else if (e.key === 'Escape') {
+                                    setEditPopover(null);
+                                  }
+                                }}
+                              />
+                              <div id="editcat-listbox" role="listbox" className="mt-2 max-h-48 overflow-auto rounded-md border border-gray-700 bg-gray-900">
+                                {fuzzyFilter(categoryOptions, editCategory).map((c, idx) => (
+                                  <div
+                                    id={`editcat-opt-${idx}`}
+                                    role="option"
+                                    aria-selected={idx === editCatIndex}
+                                    key={c}
+                                      className={`px-3 py-2 cursor-pointer ${idx === editCatIndex ? 'bg-gray-800' : 'hover:bg-gray-800'}`}
+                                      onMouseEnter={() => setEditCatIndex(idx)}
+                                      onMouseDown={(e) => { e.preventDefault(); setEditCategory(c); setEditPopover(null); }}
+                                    >
+                                      {c}
+                                    </div>
+                                  ))}
+                              </div>
+                            </div>
+                          )}
+                        </span>
+
+                      {/* Date popover */}
+                      <span className="relative">
+                          <button
+                            type="button"
+                            onClick={(e) => { setEditPopover((p) => (p === 'date' ? null : 'date')); (e && setEditPopoverAnchor(e.currentTarget)); }}
+                            className="shrink-0 p-1 rounded bg-gray-800 border border-gray-700 text-gray-200 hover:border-gray-500"
+                          >
+                            <Icon name="calendar" />
+                            <span className="sr-only">Due date</span>
+                          </button>
+                          
+                          {editPopover === 'date' && editPopoverStyle && (
+                            <div id="edit-popover" className="fixed z-50 bg-gray-900 border border-gray-700 rounded p-2 shadow-xl" style={{ left: editPopoverStyle.left + 'px', top: editPopoverStyle.top + 'px', width: editPopoverStyle.width + 'px' }}>
+                              <input
+                                type="date"
+                                className="w-full p-2 rounded bg-gray-800 border border-gray-700"
+                                value={editDue}
+                                onChange={(e) => setEditDue(e.target.value)}
+                                onKeyDown={(e) => e.key === 'Escape' && setEditPopover(null)}
+                              />
+                            </div>
+                          )}
+                        </span>
+
+                      {/* Priority popover */}
+                      <span className="relative">
+                          <button
+                            type="button"
+                            onClick={(e) => { setEditPopover((p) => (p === 'prio' ? null : 'prio')); (e && setEditPopoverAnchor(e.currentTarget)); }}
+                            className="shrink-0 p-1 rounded bg-gray-800 border border-gray-700 text-gray-200 hover:border-gray-500"
+                          >
+                            <Icon name="flag" />
+                            <span className="sr-only">Priority</span>
+                          </button>
+                          
+                          {editPopover === 'prio' && editPopoverStyle && (
+                            <div id="edit-popover" className="fixed z-50 bg-gray-900 border border-gray-700 rounded p-2 shadow-xl" style={{ left: editPopoverStyle.left + 'px', top: editPopoverStyle.top + 'px', width: Math.max(200, editPopoverStyle.width - 64) + 'px' }}>
+                              <div
+                                role="listbox"
+                                tabIndex={0}
+                                ref={editPrioListRef}
+                                className="outline-none"
+                                onKeyDown={(e) => {
+                                  const max = 3;
+                                  if (e.key === 'ArrowDown') { e.preventDefault(); setEditPrioIndex((i) => (i + 1) % max); }
+                                  else if (e.key === 'ArrowUp') { e.preventDefault(); setEditPrioIndex((i) => (i - 1 + max) % max); }
+                                  else if (e.key === 'Enter' || e.key === 'Tab') {
+                                    const opts = ['low','normal','high'];
+                                    setEditPriority(opts[editPrioIndex]);
+                                    setEditPopover(null);
+                                  } else if (e.key === 'Escape') setEditPopover(null);
+                                }}
+                              >
+                                {['low','normal','high'].map((p, idx) => (
+                                  <div
+                                    key={p}
+                                    role="option"
+                                    aria-selected={idx === editPrioIndex}
+                                    className={`px-3 py-2 cursor-pointer ${idx === editPrioIndex ? 'bg-gray-800' : 'hover:bg-gray-800'}`}
+                                    onMouseEnter={() => setEditPrioIndex(idx)}
+                                    onMouseDown={(e) => { e.preventDefault(); setEditPriority(p); setEditPopover(null); }}
                                   >
-                                    {c}
+                                    {priorityLabel(p)}
                                   </div>
                                 ))}
+                              </div>
                             </div>
-                          </div>
-                        )}
-                      </span>
+                          )}
+                        </span>
 
-                    {/* Date popover */}
-                    <span className="relative">
                         <button
-                          type="button"
-                          onClick={(e) => { setEditPopover((p) => (p === 'date' ? null : 'date')); (e && setEditPopoverAnchor(e.currentTarget)); }}
-                          className="shrink-0 p-1 rounded bg-gray-800 border border-gray-700 text-gray-200 hover:border-gray-500"
+                          onClick={commitEdit}
+                          className="shrink-0 p-1 rounded bg-green-600 hover:bg-green-500 text-white"
                         >
-                          <Icon name="calendar" />
-                          <span className="sr-only">Due date</span>
+                          <Icon name="check" /> <span className="sr-only">Save</span>
                         </button>
-                        
-                        {editPopover === 'date' && editPopoverStyle && (
-                          <div id="edit-popover" className="fixed z-50 bg-gray-900 border border-gray-700 rounded p-2 shadow-xl" style={{ left: editPopoverStyle.left + 'px', top: editPopoverStyle.top + 'px', width: editPopoverStyle.width + 'px' }}>
-                            <input
-                              type="date"
-                              className="w-full p-2 rounded bg-gray-800 border border-gray-700"
-                              value={editDue}
-                              onChange={(e) => setEditDue(e.target.value)}
-                              onKeyDown={(e) => e.key === 'Escape' && setEditPopover(null)}
-                            />
-                          </div>
-                        )}
-                      </span>
-
-                    {/* Priority popover */}
-                    <span className="relative">
                         <button
-                          type="button"
-                          onClick={(e) => { setEditPopover((p) => (p === 'prio' ? null : 'prio')); (e && setEditPopoverAnchor(e.currentTarget)); }}
-                          className="shrink-0 p-1 rounded bg-gray-800 border border-gray-700 text-gray-200 hover:border-gray-500"
+                          onClick={() => {
+                            setEditId(null);
+                            setEditText('');
+                            setEditCategory('');
+                            setEditDue('');
+                            setEditPriority('normal');
+                            setEditPopover(null);
+                          }}
+                          className="shrink-0 p-1 rounded bg-red-600 hover:bg-red-500 text-white"
                         >
-                          <Icon name="flag" />
-                          <span className="sr-only">Priority</span>
+                          <Icon name="x" /> <span className="sr-only">Cancel</span>
                         </button>
-                        
-                        {editPopover === 'prio' && editPopoverStyle && (
-                          <div id="edit-popover" className="fixed z-50 bg-gray-900 border border-gray-700 rounded p-2 shadow-xl" style={{ left: editPopoverStyle.left + 'px', top: editPopoverStyle.top + 'px', width: Math.max(200, editPopoverStyle.width - 64) + 'px' }}>
-                            <div
-                              role="listbox"
-                              tabIndex={0}
-                              ref={editPrioListRef}
-                              className="outline-none"
-                              onKeyDown={(e) => {
-                                const max = 3;
-                                if (e.key === 'ArrowDown') { e.preventDefault(); setEditPrioIndex((i) => (i + 1) % max); }
-                                else if (e.key === 'ArrowUp') { e.preventDefault(); setEditPrioIndex((i) => (i - 1 + max) % max); }
-                                else if (e.key === 'Enter' || e.key === 'Tab') {
-                                  const opts = ['low','normal','high'];
-                                  setEditPriority(opts[editPrioIndex]);
-                                  setEditPopover(null);
-                                } else if (e.key === 'Escape') setEditPopover(null);
-                              }}
-                            >
-                              {['low','normal','high'].map((p, idx) => (
-                                <div
-                                  key={p}
-                                  role="option"
-                                  aria-selected={idx === editPrioIndex}
-                                  className={`px-3 py-2 cursor-pointer ${idx === editPrioIndex ? 'bg-gray-800' : 'hover:bg-gray-800'}`}
-                                  onMouseEnter={() => setEditPrioIndex(idx)}
-                                  onMouseDown={(e) => { e.preventDefault(); setEditPriority(p); setEditPopover(null); }}
-                                >
-                                  {priorityLabel(p)}
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </span>
-
-                      <button
-                        onClick={commitEdit}
-                        className="shrink-0 p-1 rounded bg-green-600 hover:bg-green-500 text-white"
-                      >
-                        <Icon name="check" /> <span className="sr-only">Save</span>
-                      </button>
-                      <button
-                        onClick={() => {
-                          setEditId(null);
-                          setEditText('');
-                          setEditCategory('');
-                          setEditDue('');
-                          setEditPriority('normal');
-                          setEditPopover(null);
-                        }}
-                        className="shrink-0 p-1 rounded bg-red-600 hover:bg-red-500 text-white"
-                      >
-                        <Icon name="x" /> <span className="sr-only">Cancel</span>
-                      </button>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <span
-                      className={`flex-1 ${todo.completed ? 'line-through text-gray-500' : 'cursor-text'}`}
-                      onDoubleClick={() => beginEdit(todo.id)}
-                    >
-                      {todo.text}
-                    </span>
-                    {todo.category && (
-                      <span className={`px-2 py-0.5 text-xs rounded-full border ${categoryPillClass(todo.category)}`}>
-                        {todo.category}
-                      </span>
-                    )}
-                    {todo.dueAt && (
+                      </div>
+                    </>
+                  ) : (
+                    <>
                       <span
-                        className="relative inline-block group"
-                        onMouseEnter={() => setOpenDueId(todo.id)}
-                        onMouseLeave={() =>
-                          setOpenDueId((prev) => (prev === todo.id ? null : prev))
-                        }
+                        className={`flex-1 ${todo.completed ? 'line-through text-gray-500' : 'cursor-text'}`}
+                        onDoubleClick={() => beginEdit(todo.id)}
                       >
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setOpenDueId((prev) => (prev === todo.id ? null : todo.id))
+                        {todo.text}
+                      </span>
+                      {todo.category && (
+                        <span className={`px-2 py-0.5 text-xs rounded-full border ${categoryPillClass(todo.category)}`}>
+                          {todo.category}
+                        </span>
+                      )}
+                      {todo.dueAt && (
+                        <span
+                          className="relative inline-block group"
+                          onMouseEnter={() => setOpenDueId(todo.id)}
+                          onMouseLeave={() =>
+                            setOpenDueId((prev) => (prev === todo.id ? null : prev))
                           }
-                          className={`h-6 w-6 rounded border border-transparent flex items-center justify-center ${overdue ? 'text-red-300' : 'text-gray-300'} hover:border-gray-600`}
-                          title="Due date"
                         >
-                          <Icon name="calendar" className="h-4 w-4" />
-                        </button>
-                        {openDueId === todo.id && (
-                          <div className="absolute z-20 bottom-full right-0 mb-2 bg-gray-900 text-gray-100 border border-gray-700 rounded px-2 py-1 text-xs shadow-lg whitespace-nowrap">
-                            {new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(
-                              new Date(todo.dueAt),
-                            )}
-                          </div>
-                        )}
-                      </span>
-                    )}
-                    {
-                      <span
-                        className={`px-2 py-0.5 text-xs rounded-full border ${
-                          (todo.priority || 'normal') === 'high'
-                            ? 'bg-red-900/40 border-red-700 text-red-300'
-                            : (todo.priority || 'normal') === 'low'
-                              ? 'bg-green-900/40 border-green-700 text-green-300'
-                              : 'bg-orange-900/40 border-orange-700 text-orange-300'
-                        }`}
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setOpenDueId((prev) => (prev === todo.id ? null : todo.id))
+                            }
+                            className={`h-6 w-6 rounded border border-transparent flex items-center justify-center ${overdue ? 'text-red-300' : 'text-gray-300'} hover:border-gray-600`}
+                            title="Due date"
+                          >
+                            <Icon name="calendar" className="h-4 w-4" />
+                          </button>
+                          {openDueId === todo.id && (
+                            <div className="absolute z-20 bottom-full right-0 mb-2 bg-gray-900 text-gray-100 border border-gray-700 rounded px-2 py-1 text-xs shadow-lg whitespace-nowrap">
+                              {new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(
+                                new Date(todo.dueAt),
+                              )}
+                            </div>
+                          )}
+                        </span>
+                      )}
+                      {
+                        <span
+                          className={`px-2 py-0.5 text-xs rounded-full border ${
+                            (todo.priority || 'normal') === 'high'
+                              ? 'bg-red-900/40 border-red-700 text-red-300'
+                              : (todo.priority || 'normal') === 'low'
+                                ? 'bg-green-900/40 border-green-700 text-green-300'
+                                : 'bg-orange-900/40 border-orange-700 text-orange-300'
+                          }`}
+                        >
+                          {priorityLabel(todo.priority || 'normal')}
+                        </span>
+                      }
+                    </>
+                  )}
+                  {editId !== todo.id && (
+                    <>
+                      <button
+                        onClick={() => !todo.completed && beginEdit(todo.id)}
+                        disabled={todo.completed}
+                        className="px-2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1"
+                        title="Edit"
                       >
-                        {priorityLabel(todo.priority || 'normal')}
-                      </span>
-                    }
-                  </>
-                )}
-                {editId !== todo.id && (
-                  <>
-                    <button
-                      onClick={() => !todo.completed && beginEdit(todo.id)}
-                      disabled={todo.completed}
-                      className="px-2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1"
-                      title="Edit"
-                    >
-                      <Icon name="edit" />
-                      <span className="sr-only">Edit</span>
-                    </button>
-                    <button
-                      onClick={() => !todo.completed && requestDelete(todo)}
-                      disabled={todo.completed}
-                      className="px-2 text-red-300 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1"
-                      title="Delete"
-                    >
-                      <Icon name="trash" />
-                      <span className="sr-only">Delete</span>
-                    </button>
-                  </>
-                )}
-              </div>
-            </li>
-          );
-        })}
-        {sortedTodos.length === 0 && <li className="text-center text-gray-400 bg-gray-800 border border-gray-700 rounded-xl p-5 w-full"><img src="/android-chrome-512x512.png" alt="DarkTodos" className="h-10 w-10 inline-block align-middle" /> No todos yet <img src="/android-chrome-512x512.png" alt="DarkTodos" className="h-10 w-10 inline-block align-middle" /></li>}
-      </ul>
+                        <Icon name="edit" />
+                        <span className="sr-only">Edit</span>
+                      </button>
+                      <button
+                        onClick={() => !todo.completed && requestDelete(todo)}
+                        disabled={todo.completed}
+                        className="px-2 text-red-300 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1"
+                        title="Delete"
+                      >
+                        <Icon name="trash" />
+                        <span className="sr-only">Delete</span>
+                      </button>
+                    </>
+                  )}
+                </div>
+              </li>
+            );
+          })}
+          {sortedTodos.length === 0 && <li className="text-center text-gray-400 bg-gray-800 border border-gray-700 rounded-xl p-5 w-full"><img src="/android-chrome-512x512.png" alt="DarkTodos" className="h-10 w-10 inline-block align-middle" /> No todos yet <img src="/android-chrome-512x512.png" alt="DarkTodos" className="h-10 w-10 inline-block align-middle" /></li>}
+        </ul>
+      </div>
       {errorMsg && (
         <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-red-900 px-4 py-2 rounded border border-red-700">
           {errorMsg}

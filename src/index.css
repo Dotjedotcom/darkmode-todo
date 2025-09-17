@@ -41,7 +41,7 @@ body,
   background-color: #1f2937; /* gray-800 */
   border: 1px solid #374151; /* gray-700 */
   color: #e5e7eb; /* gray-200 */
-  padding: 0.5rem 2.5rem 0.5rem 0.75rem; /* extra right padding for caret */
+  padding: 0.2rem 2.5rem 0.2rem 0.75rem; /* extra right padding for caret */
   border-radius: 0.75rem; /* rounded-xl */
   transition: border-color 150ms, box-shadow 150ms;
   background-image:
