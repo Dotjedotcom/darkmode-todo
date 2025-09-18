@@ -23,8 +23,8 @@ class ErrorBoundary extends React.Component {
           <div className="bg-gray-800 border border-gray-700 rounded-2xl p-6 max-w-md w-full">
             <h1 className="text-xl font-bold mb-2">App Error</h1>
             <p className="text-sm mb-3">
-              An unexpected error occurred. This preview environment might not support certain browser
-              APIs like IndexedDB.
+              An unexpected error occurred. This preview environment might not support certain
+              browser APIs like IndexedDB.
             </p>
             <pre className="bg-gray-900 p-3 rounded text-xs overflow-auto border border-gray-700">
               {this.state.detail}

@@ -31,7 +31,7 @@ const TodoUtilities = forwardRef(function TodoUtilities(
     <div
       ref={ref}
       id="utility"
-      className="grid w-full max-w-3xl gap-3 grid-cols-3"
+      className="grid w-full max-w-3xl gap-3 md:grid-cols-3"
       aria-busy={busyAction ? 'true' : 'false'}
     >
       <UtilityButton
@@ -67,6 +67,7 @@ const TodoUtilities = forwardRef(function TodoUtilities(
         disabled={disabled || totalCount === 0}
         busy={isClearingAll}
       />
+      <SummaryCard total={totalCount} pending={pendingCount} completed={completedCount} />
     </div>
   );
 });

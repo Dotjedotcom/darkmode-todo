@@ -45,7 +45,10 @@ export function CategoryPopoverButton({ value, onChange, options, disabled }) {
     deps: [inputValue, options.length],
   });
 
-  const suggestionList = useMemo(() => fuzzyFilter(options, inputValue).slice(0, 8), [options, inputValue]);
+  const suggestionList = useMemo(
+    () => fuzzyFilter(options, inputValue).slice(0, 8),
+    [options, inputValue],
+  );
 
   function commit(category) {
     setInputValue(category);
@@ -112,11 +115,16 @@ export function CategoryPopoverButton({ value, onChange, options, disabled }) {
                   commit(entry);
                 }}
               >
-                <span className="flex items-center gap-2"><span className="text-base leading-none">{categoryIcon(entry)}</span><span className="text-sm">{entry}</span></span>
+                <span className="flex items-center gap-2">
+                  <span className="text-base leading-none">{categoryIcon(entry)}</span>
+                  <span className="text-sm">{entry}</span>
+                </span>
               </button>
             ))}
             {suggestionList.length === 0 && (
-              <div className="px-3 py-2 text-xs text-gray-500">Press Enter to use “{inputValue || 'category'}”.</div>
+              <div className="px-3 py-2 text-xs text-gray-500">
+                Press Enter to use “{inputValue || 'category'}”.
+              </div>
             )}
           </div>
         </div>
@@ -144,7 +152,10 @@ export function DatePopoverButton({ value, onChange, disabled }) {
   const [open, setOpen] = useState(false);
 
   usePopover(open, setOpen, containerRef);
-  const popoverStyle = useAnchoredPosition(open, anchorRef, popoverRef, { width: 224, deps: [value] });
+  const popoverStyle = useAnchoredPosition(open, anchorRef, popoverRef, {
+    width: 224,
+    deps: [value],
+  });
 
   return (
     <div className="relative" ref={containerRef}>
@@ -217,7 +228,10 @@ export function PriorityPopoverButton({ value, onChange, disabled }) {
   const current = value || 'normal';
 
   usePopover(open, setOpen, containerRef);
-  const popoverStyle = useAnchoredPosition(open, anchorRef, popoverRef, { width: 192, deps: [current] });
+  const popoverStyle = useAnchoredPosition(open, anchorRef, popoverRef, {
+    width: 192,
+    deps: [current],
+  });
 
   return (
     <div className="relative" ref={containerRef}>
@@ -271,7 +285,10 @@ export function NotesPopoverButton({ value, onChange, disabled }) {
   }, [value]);
 
   usePopover(open, setOpen, containerRef);
-  const popoverStyle = useAnchoredPosition(open, anchorRef, popoverRef, { width: 288, deps: [draft] });
+  const popoverStyle = useAnchoredPosition(open, anchorRef, popoverRef, {
+    width: 288,
+    deps: [draft],
+  });
 
   return (
     <div className="relative" ref={containerRef}>

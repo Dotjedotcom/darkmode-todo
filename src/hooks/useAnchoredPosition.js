@@ -2,8 +2,14 @@ import { useEffect, useState } from 'react';
 
 const VIEWPORT_MARGIN = 8;
 
-export default function useAnchoredPosition(open, anchorRef, popoverRef, { width: forcedWidth = null, offset = 8, deps = [] } = {}) {
+export default function useAnchoredPosition(
+  open,
+  anchorRef,
+  popoverRef,
+  { width: forcedWidth = null, offset = 8, deps = [] } = {},
+) {
   const [style, setStyle] = useState(null);
+  const depsKey = Array.isArray(deps) ? deps.join('|') : deps;
 
   useEffect(() => {
     if (!open) return undefined;
@@ -47,7 +53,7 @@ export default function useAnchoredPosition(open, anchorRef, popoverRef, { width
       window.removeEventListener('resize', handleViewportChange);
       window.removeEventListener('scroll', handleViewportChange, true);
     };
-  }, [open, anchorRef, popoverRef, forcedWidth, offset, Array.isArray(deps) ? deps.join('|') : deps]);
+  }, [open, anchorRef, popoverRef, forcedWidth, offset, depsKey]);
 
   return style;
 }

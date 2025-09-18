@@ -66,13 +66,9 @@ export default function AddTodoForm({
   }
 
   return (
-    <div
-      id="add"
-      className="w-full max-w-3xl flex flex-wrap gap-2 mb-3"
-      aria-busy={isBusy}
-    >
+    <div id="add" className="w-full max-w-3xl flex flex-wrap gap-2 mb-3" aria-busy={isBusy}>
       <input
-        className="flex-1 min-w-[200px] p-3 rounded-xl bg-gray-800 border border-gray-700"
+        className="flex-1 min-w-[120px] p-3 rounded-xl bg-gray-800 border border-gray-700"
         placeholder="What needs doing?"
         value={text}
         onChange={(event) => !disabled && setText(event.target.value)}

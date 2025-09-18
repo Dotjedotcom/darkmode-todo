@@ -12,8 +12,8 @@ export default function InfoDialog({ kind, onClose }) {
         {isHelp ? (
           <div className="space-y-3 text-sm text-gray-200">
             <p>
-              This app is a simple, installable PWA to track tasks with categories, dates and priorities.
-              It works offline and stores data in IndexedDB with graceful fallbacks.
+              This app is a simple, installable PWA to track tasks with categories, dates and
+              priorities. It works offline and stores data in IndexedDB with graceful fallbacks.
             </p>
             <ul className="list-disc pl-5 space-y-1">
               <li>Add tasks; use More options for Category, Date and Priority.</li>
@@ -27,8 +27,8 @@ export default function InfoDialog({ kind, onClose }) {
           <div className="space-y-3 text-sm text-gray-200">
             <p>Built by you, with a little help from an AI coding partner.</p>
             <p>
-              Co-author’s note: thanks for the great collaboration — your ideas shaped a clean, accessible,
-              and delightful todo app.
+              Co-author’s note: thanks for the great collaboration — your ideas shaped a clean,
+              accessible, and delightful todo app.
             </p>
           </div>
         )}

@@ -123,7 +123,10 @@ describe('useTodoStore', () => {
     primeStoreWithStorage(storage, await storage.getAll());
 
     await useTodoStore.getState().clearCompleted();
-    assert.deepEqual(useTodoStore.getState().todos.map((t) => t.id), [1]);
+    assert.deepEqual(
+      useTodoStore.getState().todos.map((t) => t.id),
+      [1],
+    );
 
     await useTodoStore.getState().toggleAll();
     assert.ok(useTodoStore.getState().todos.every((t) => t.completed));
@@ -141,9 +144,7 @@ describe('useTodoStore', () => {
     assert.equal(added.length, 2);
     assert.equal(useTodoStore.getState().todos.length, 2);
 
-    const replacement = [
-      { text: 'C', completed: false, createdAt: 3 },
-    ];
+    const replacement = [{ text: 'C', completed: false, createdAt: 3 }];
     const replaced = await useTodoStore.getState().replaceAll(replacement);
     assert.equal(replaced.length, 1);
     assert.equal(useTodoStore.getState().todos.length, 1);

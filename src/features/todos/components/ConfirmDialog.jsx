@@ -64,7 +64,10 @@ export default function ConfirmDialog({
         <h2 className="text-lg font-semibold mb-2">Confirm</h2>
         <p className="text-sm text-gray-300 mb-4">{message}</p>
         <div className="flex justify-end gap-2">
-          <button onClick={onCancel} className="px-3 py-1 rounded bg-gray-700 border border-gray-600">
+          <button
+            onClick={onCancel}
+            className="px-3 py-1 rounded bg-gray-700 border border-gray-600"
+          >
             Cancel
           </button>
           <button

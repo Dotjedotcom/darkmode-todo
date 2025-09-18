@@ -21,11 +21,9 @@ export default function TodoFilters({
   onSearchChange,
   filterStatus,
   onFilterStatusChange,
-  filterCategory,
-  onFilterCategoryChange,
   sortMode,
   onSortModeChange,
-  categoryOptions,
+  onRequestReset,
   disabled = false,
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -57,7 +55,7 @@ export default function TodoFilters({
 
   const popoverStyle = useAnchoredPosition(menuOpen && !disabled, buttonRef, menuRef, {
     width: 288,
-    deps: [filterStatus, filterCategory, sortMode],
+    deps: [filterStatus, sortMode],
   });
 
   const sortSummary = useMemo(
@@ -68,8 +66,7 @@ export default function TodoFilters({
     () => STATUS_OPTIONS.find((option) => option.value === filterStatus)?.label ?? 'All tasks',
     [filterStatus],
   );
-  const hasCategory = !!filterCategory;
-  const hasActiveFilters = filterStatus !== 'all' || hasCategory;
+  const hasActiveFilters = filterStatus !== 'all';
 
   return (
     <div className="grid gap-3 rounded-xl border border-gray-700 bg-gray-800/80 p-3">
@@ -92,8 +89,8 @@ export default function TodoFilters({
               disabled
                 ? 'cursor-not-allowed border-gray-800 bg-gray-900 text-gray-500'
                 : menuOpen
-                ? 'border-gray-500 bg-gray-800 text-gray-100'
-                : 'border-gray-700 bg-gray-900 text-gray-200 hover:border-gray-500'
+                  ? 'border-gray-500 bg-gray-800 text-gray-100'
+                  : 'border-gray-700 bg-gray-900 text-gray-200 hover:border-gray-500'
             }`}
             disabled={disabled}
           >
@@ -102,10 +99,12 @@ export default function TodoFilters({
               <span>Sort & Filter</span>
               <span className="text-xs text-gray-400">
                 {sortSummary}
-                {hasActiveFilters && ` · ${statusSummary}${hasCategory ? `, ${filterCategory}` : ''}`}
+                {hasActiveFilters && ` · ${statusSummary}`}
               </span>
             </span>
-            {hasActiveFilters && <span className="ml-auto h-2 w-2 rounded-full bg-blue-400" aria-hidden="true" />}
+            {hasActiveFilters && (
+              <span className="ml-auto h-2 w-2 rounded-full bg-blue-400" aria-hidden="true" />
+            )}
           </button>
           {menuOpen && !disabled && (
             <div
@@ -158,28 +157,13 @@ export default function TodoFilters({
                     })}
                   </div>
                 </section>
-                <section>
-                  <p className="mb-2 text-xs uppercase tracking-wide text-gray-400">Category</p>
-                  <select
-                    value={filterCategory}
-                    onChange={(event) => onFilterCategoryChange(event.target.value)}
-                    className="w-full rounded-md border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100"
-                  >
-                    <option value="">All categories</option>
-                    {categoryOptions.map((option) => (
-                      <option key={option} value={option}>
-                        {option}
-                      </option>
-                    ))}
-                  </select>
-                </section>
                 {hasActiveFilters && (
                   <button
                     type="button"
                     className="flex w-full items-center justify-center gap-2 rounded-md border border-gray-700 px-3 py-2 text-xs text-gray-300 transition-colors hover:border-gray-500 hover:text-gray-100"
                     onClick={() => {
-                      onFilterStatusChange('all');
-                      onFilterCategoryChange('');
+                      if (onRequestReset) onRequestReset();
+                      else onFilterStatusChange('all');
                     }}
                   >
                     <Icon name="refresh" className="h-3.5 w-3.5" />
@@ -200,14 +184,13 @@ TodoFilters.propTypes = {
   onSearchChange: PropTypes.func.isRequired,
   filterStatus: PropTypes.oneOf(['all', 'active', 'completed']).isRequired,
   onFilterStatusChange: PropTypes.func.isRequired,
-  filterCategory: PropTypes.string.isRequired,
-  onFilterCategoryChange: PropTypes.func.isRequired,
   sortMode: PropTypes.oneOf(['default', 'due', 'created', 'priority']).isRequired,
   onSortModeChange: PropTypes.func.isRequired,
-  categoryOptions: PropTypes.arrayOf(PropTypes.string).isRequired,
+  onRequestReset: PropTypes.func,
   disabled: PropTypes.bool,
 };
 
 TodoFilters.defaultProps = {
+  onRequestReset: undefined,
   disabled: false,
 };

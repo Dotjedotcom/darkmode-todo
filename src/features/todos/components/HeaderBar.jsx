@@ -69,7 +69,8 @@ export default function HeaderBar({
     const onClick = (event) => {
       if (
         summaryMenuRef.current &&
-        (summaryMenuRef.current.contains(event.target) || summaryButtonRef.current?.contains(event.target))
+        (summaryMenuRef.current.contains(event.target) ||
+          summaryButtonRef.current?.contains(event.target))
       )
         return;
       setShowSummary(false);
@@ -86,10 +87,7 @@ export default function HeaderBar({
   }, [showSummary]);
 
   return (
-    <div
-      id="menu"
-      className="w-full max-w-3xl flex items-center justify-between mb-3 to-gray-100"
-    >
+    <div id="menu" className="w-full max-w-3xl flex items-center justify-between mb-3 to-gray-100">
       <div className="relative flex items-center gap-2 text-sm text-gray-400">
         <span>{remainingCount} remaining</span>
         <button

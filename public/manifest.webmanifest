@@ -10,9 +10,19 @@
   "theme_color": "#0b0f19",
   "icons": [
     { "src": "/android-chrome-192x192.png", "sizes": "any", "type": "image/png", "purpose": "any" },
-    { "src": "/android-chrome-512x512.png", "sizes": "any", "type": "image/png", "purpose": "maskable" },
+    {
+      "src": "/android-chrome-512x512.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
     { "src": "/apple-touch-icon.png", "sizes": "any", "type": "image/png", "purpose": "any" },
-    { "src": "/apple-touch-icon.png", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    },
     { "src": "/favicon.ico", "sizes": "72x72 96x96 128x128" }
   ],
   "shortcuts": [

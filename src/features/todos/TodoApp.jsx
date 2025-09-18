@@ -7,6 +7,7 @@ import TodoUtilities from './components/TodoUtilities.jsx';
 import TodoList from './components/TodoList.jsx';
 import ConfirmDialog from './components/ConfirmDialog.jsx';
 import InfoDialog from './components/InfoDialog.jsx';
+import CategoryFilterRow from './components/CategoryFilterRow.jsx';
 import {
   subscribeToServiceWorkerUpdate,
   applyServiceWorkerUpdate,
@@ -156,7 +157,10 @@ export default function TodoApp() {
       if (filterStatus === 'active' && todo.completed) return false;
       if (filterStatus === 'completed' && !todo.completed) return false;
       if (filterCategory && (todo.category || '').trim() !== filterCategory.trim()) return false;
-      if (search && !`${todo.text} ${todo.category || ''}`.toLowerCase().includes(search.toLowerCase())) {
+      if (
+        search &&
+        !`${todo.text} ${todo.category || ''}`.toLowerCase().includes(search.toLowerCase())
+      ) {
         return false;
       }
       return true;
@@ -179,7 +183,9 @@ export default function TodoApp() {
       if (sortMode === 'priority') {
         const order = { high: 0, normal: 1, low: 2 };
         if ((a.completed ? 1 : 0) !== (b.completed ? 1 : 0)) return a.completed ? 1 : -1;
-        return order[a.priority || 'normal'] - order[b.priority || 'normal'] || a.createdAt - b.createdAt;
+        return (
+          order[a.priority || 'normal'] - order[b.priority || 'normal'] || a.createdAt - b.createdAt
+        );
       }
       return a.completed === b.completed ? a.createdAt - b.createdAt : a.completed ? 1 : -1;
     });
@@ -271,7 +277,9 @@ export default function TodoApp() {
 
   async function handleClearCompleted() {
     try {
-      await runAction('clearCompleted', 'Failed to clear completed.', () => clearCompletedInStore());
+      await runAction('clearCompleted', 'Failed to clear completed.', () =>
+        clearCompletedInStore(),
+      );
     } catch {
       /* error already surfaced */
     }
@@ -318,7 +326,8 @@ export default function TodoApp() {
         const sanitized = items
           .map((record) => {
             const safeText = record && typeof record.text === 'string' ? record.text : '';
-            const safeCategory = record && typeof record.category === 'string' ? record.category : '';
+            const safeCategory =
+              record && typeof record.category === 'string' ? record.category : '';
             const dueAt =
               record && (typeof record.dueAt === 'number' || typeof record.dueAt === 'string')
                 ? Number.isNaN(Number(record.dueAt))
@@ -326,12 +335,23 @@ export default function TodoApp() {
                   : Number(record.dueAt)
                 : null;
             const priority =
-              record && (record.priority === 'low' || record.priority === 'normal' || record.priority === 'high')
+              record &&
+              (record.priority === 'low' ||
+                record.priority === 'normal' ||
+                record.priority === 'high')
                 ? record.priority
                 : 'normal';
             const completed = !!(record && record.completed);
-            const createdAt = record && typeof record.createdAt === 'number' ? record.createdAt : Date.now();
-            return { text: safeText, category: safeCategory, dueAt, priority, completed, createdAt };
+            const createdAt =
+              record && typeof record.createdAt === 'number' ? record.createdAt : Date.now();
+            return {
+              text: safeText,
+              category: safeCategory,
+              dueAt,
+              priority,
+              completed,
+              createdAt,
+            };
           })
           .filter((item) => item.text.trim().length > 0);
         if (sanitized.length === 0) {
@@ -460,7 +480,11 @@ export default function TodoApp() {
         await handleClearAll();
       } else if (confirmKind === 'clearCompleted') {
         await handleClearCompleted();
-      } else if (confirmKind === 'importReplace' && Array.isArray(pendingImport) && pendingImport.length) {
+      } else if (
+        confirmKind === 'importReplace' &&
+        Array.isArray(pendingImport) &&
+        pendingImport.length
+      ) {
         await runAction('import', 'Failed to import todos.', async () => {
           const added = await replaceAllInStore(pendingImport);
           setInfoMsg(`Replaced with ${added.length} item(s).`);
@@ -486,7 +510,7 @@ export default function TodoApp() {
   }
 
   return (
-    <div className="h-full min-h-screen bg-gray-900 text-gray-100 flex flex-col items-center p-6">
+    <div className="min-h-screen bg-gray-900 text-gray-100 flex flex-col items-center p-6 overflow-hidden">
       <h1 className="w-full max-w-3xl text-3xl font-extrabold tracking-tight mb-2">
         <span className="bg-gradient-to-r from-gray-100 to-gray-400 bg-clip-text text-transparent">
           😈 DarkTodos&trade;
@@ -509,12 +533,18 @@ export default function TodoApp() {
         onUpdateApp={handleApplyUpdate}
       />
       {!storageReady && (
-        <div className="w-full max-w-3xl mb-3 px-4 py-2 rounded-xl border border-gray-800 bg-gray-800/70 text-sm text-gray-300" role="status">
+        <div
+          className="w-full max-w-3xl mb-3 px-4 py-2 rounded-xl border border-gray-800 bg-gray-800/70 text-sm text-gray-300"
+          role="status"
+        >
           Loading your saved todos…
         </div>
       )}
       {storageReady && busyLabel && (
-        <div className="w-full max-w-3xl mb-3 px-4 py-2 rounded-xl border border-blue-800 bg-blue-900/40 text-sm text-blue-200" role="status">
+        <div
+          className="w-full max-w-3xl mb-3 px-4 py-2 rounded-xl border border-blue-800 bg-blue-900/40 text-sm text-blue-200"
+          role="status"
+        >
           {busyLabel}
         </div>
       )}
@@ -529,40 +559,55 @@ export default function TodoApp() {
         disabled={interactionsDisabled}
         busyAction={busyAction}
       />
-      <div className="w-full max-w-3xl mb-4">
-        <TodoFilters
-          search={search}
-          onSearchChange={setSearch}
-          filterStatus={filterStatus}
-          onFilterStatusChange={setFilterStatus}
-          filterCategory={filterCategory}
-          onFilterCategoryChange={setFilterCategory}
-          sortMode={sortMode}
-          onSortModeChange={setSortMode}
-          categoryOptions={categoryOptions}
-          disabled={interactionsDisabled}
-        />
+      <div className="w-full max-w-3xl flex-1 flex flex-col gap-4 overflow-hidden">
+        <div className="flex-shrink-0">
+          <TodoFilters
+            search={search}
+            onSearchChange={setSearch}
+            filterStatus={filterStatus}
+            onFilterStatusChange={setFilterStatus}
+            sortMode={sortMode}
+            onSortModeChange={setSortMode}
+            onRequestReset={() => {
+              setFilterStatus('all');
+              setFilterCategory('');
+            }}
+            disabled={interactionsDisabled}
+          />
+        </div>
+        <div className="flex-shrink-0">
+          <TodoUtilities
+            ref={utilitiesPanelRef}
+            visible={showUtilities}
+            totalCount={totalCount}
+            completedCount={completedCount}
+            onConfirmRequest={setConfirmKind}
+            onDismiss={() => setShowUtilities(false)}
+            disabled={interactionsDisabled}
+            busyAction={busyAction}
+          />
+        </div>
+        <div className="w-full max-w-3xl mt-4">
+          <CategoryFilterRow
+            categories={categoryOptions}
+            activeCategory={filterCategory}
+            onSelectCategory={setFilterCategory}
+            disabled={interactionsDisabled}
+          />
+        </div>
+        <div className="flex-1 overflow-hidden">
+          <TodoList
+            todos={sortedTodos}
+            onToggleTodo={handleToggleTodo}
+            onRequestDelete={requestDelete}
+            onUpdateTodo={handleUpdateTodo}
+            onDeleteTodo={handleDeleteTodo}
+            categoryOptions={categoryOptions}
+            disabled={interactionsDisabled}
+            busyAction={busyAction}
+          />
+        </div>
       </div>
-      <TodoUtilities
-        ref={utilitiesPanelRef}
-        visible={showUtilities}
-        totalCount={totalCount}
-        completedCount={completedCount}
-        onConfirmRequest={setConfirmKind}
-        onDismiss={() => setShowUtilities(false)}
-        disabled={interactionsDisabled}
-        busyAction={busyAction}
-      />
-      <TodoList
-        todos={sortedTodos}
-        onToggleTodo={handleToggleTodo}
-        onRequestDelete={requestDelete}
-        onUpdateTodo={handleUpdateTodo}
-        onDeleteTodo={handleDeleteTodo}
-        categoryOptions={categoryOptions}
-        disabled={interactionsDisabled}
-        busyAction={busyAction}
-      />
       {showUpdateToast && (
         <div className="fixed bottom-24 right-4 z-40">
           <div className="flex items-center gap-3 rounded-xl border border-blue-700 bg-gray-900/95 px-4 py-3 text-sm text-gray-100 shadow-2xl">
@@ -616,11 +661,17 @@ export default function TodoApp() {
         </span>
         <span className="pointer-events-auto px-3 py-1 rounded-full bg-gray-800/80 border border-gray-700 text-xs text-gray-300 backdrop-blur bg-gradient-to-r from-gray-100 to-gray-400 bg-clip-text text-transparent">
           <a href="//dotinga.com" target="_parent" rel="noreferrer">
-             ★ Dotjedotcom ★
+            ★ Dotjedotcom ★
           </a>
         </span>
       </footer>
-      <input ref={fileInputRef} type="file" accept="application/json" hidden onChange={handleImportFile} />
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="application/json"
+        hidden
+        onChange={handleImportFile}
+      />
     </div>
   );
 }

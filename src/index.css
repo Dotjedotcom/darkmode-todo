@@ -43,14 +43,18 @@ body,
   color: #e5e7eb; /* gray-200 */
   padding: 0.2rem 2.5rem 0.2rem 0.75rem; /* extra right padding for caret */
   border-radius: 0.75rem; /* rounded-xl */
-  transition: border-color 150ms, box-shadow 150ms;
+  transition:
+    border-color 150ms,
+    box-shadow 150ms;
   background-image:
     linear-gradient(45deg, transparent 50%, currentColor 50%),
     linear-gradient(135deg, currentColor 50%, transparent 50%);
   background-position:
     calc(100% - 1.15rem) 52%,
     calc(100% - 0.8rem) 52%;
-  background-size: 6px 6px, 6px 6px;
+  background-size:
+    6px 6px,
+    6px 6px;
   background-repeat: no-repeat;
 }
 .tw-select.tw-select-lg {
@@ -59,5 +63,18 @@ body,
   padding-left: 0.75rem; /* pl-3 */
   padding-right: 2.5rem; /* pr-10 */
 }
-.tw-select:hover { border-color: #6b7280; /* gray-500 */ }
-.tw-select:focus { outline: 2px solid transparent; box-shadow: 0 0 0 2px #4b5563; /* ring gray-600 */ border-color: #6b7280; }
+.tw-select:hover {
+  border-color: #6b7280; /* gray-500 */
+}
+.tw-select:focus {
+  outline: 2px solid transparent;
+  box-shadow: 0 0 0 2px #4b5563; /* ring gray-600 */
+  border-color: #6b7280;
+}
+
+.line-clamp-3 {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
