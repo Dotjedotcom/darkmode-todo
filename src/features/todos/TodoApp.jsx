@@ -587,7 +587,7 @@ export default function TodoApp() {
             busyAction={busyAction}
           />
         </div>
-        <div className="w-full max-w-3xl mt-4">
+        <div className="w-full max-w-3xl">
           <CategoryFilterRow
             categories={categoryOptions}
             activeCategory={filterCategory}
