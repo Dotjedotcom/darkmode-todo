@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import Icon from '../../../components/Icon.jsx';
-import { priorityLabel, priorityGlyph } from '../../../utils/priority.js';
+import { priorityLabel, priorityGlyph, normalizePriority } from '../../../utils/priority.js';
 import { categoryPillClass, categoryIcon } from '../../../utils/category.js';
 import { toLocalDateInput } from '../../../utils/date.js';
 import {
@@ -10,17 +10,22 @@ import {
   NotesPopoverButton,
   PriorityPopoverButton,
 } from './DetailSelectors.jsx';
+import useAnchoredPosition from '../../../hooks/useAnchoredPosition.js';
 
 const PRIORITY_BORDER = {
-  high: 'border-red-600',
-  normal: 'border-amber-500',
-  low: 'border-emerald-500',
+  veryLow: 'border-green-700',
+  low: 'border-emerald-600',
+  medium: 'border-amber-500',
+  high: 'border-orange-600',
+  urgent: 'border-red-700',
 };
 
 const PRIORITY_BADGE = {
-  high: 'bg-red-900/40 border-red-600 text-red-200',
-  normal: 'bg-amber-900/30 border-amber-500 text-amber-200',
-  low: 'bg-emerald-900/30 border-emerald-500 text-emerald-200',
+  veryLow: 'bg-green-900/40 border-green-700 text-green-200',
+  low: 'bg-emerald-900/40 border-emerald-600 text-emerald-200',
+  medium: 'bg-amber-900/30 border-amber-500 text-amber-200',
+  high: 'bg-orange-900/30 border-orange-600 text-orange-200',
+  urgent: 'bg-red-900/40 border-red-700 text-red-200',
 };
 
 const DATE_FORMATTER = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' });
@@ -39,7 +44,7 @@ export default function TodoList({
   const [editText, setEditText] = useState('');
   const [editCategory, setEditCategory] = useState('');
   const [editDue, setEditDue] = useState('');
-  const [editPriority, setEditPriority] = useState('normal');
+  const [editPriority, setEditPriority] = useState('medium');
   const [editNotes, setEditNotes] = useState('');
   const editInputRef = useRef(null);
 
@@ -55,7 +60,7 @@ export default function TodoList({
     setEditText(todo.text);
     setEditCategory(todo.category || '');
     setEditDue(todo.dueAt ? toLocalDateInput(todo.dueAt) : '');
-    setEditPriority(todo.priority || 'normal');
+    setEditPriority(normalizePriority(todo.priority));
     setEditNotes(todo.notes || '');
   }
 
@@ -64,7 +69,7 @@ export default function TodoList({
     setEditText('');
     setEditCategory('');
     setEditDue('');
-    setEditPriority('normal');
+    setEditPriority('medium');
     setEditNotes('');
   }, []);
 
@@ -80,7 +85,7 @@ export default function TodoList({
       text: trimmed,
       category: editCategory.trim(),
       dueInput: editDue,
-      priority: editPriority || 'normal',
+      priority: normalizePriority(editPriority),
       notes: editNotes.trim(),
     });
     if (success) {
@@ -94,14 +99,14 @@ export default function TodoList({
 
   useEffect(() => {
     if (editingId == null) return undefined;
-    const handleDoubleClick = (event) => {
+    const handleClick = (event) => {
       const editingNode = document.querySelector('[data-editing="true"]');
       if (!editingNode) return;
       if (editingNode.contains(event.target)) return;
       cancelEdit();
     };
-    document.addEventListener('dblclick', handleDoubleClick);
-    return () => document.removeEventListener('dblclick', handleDoubleClick);
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
   }, [editingId, cancelEdit]);
 
   return (
@@ -109,10 +114,11 @@ export default function TodoList({
       <div id="list" className="h-full overflow-y-auto overflow-x-hidden pr-2">
         <ul className="space-y-2 pb-6">
           {todos.map((todo) => {
-            const priorityKey = todo.priority || 'normal';
+            const priorityKey = normalizePriority(todo.priority);
             const borderClass = PRIORITY_BORDER[priorityKey] ?? 'border-gray-700';
             const badgeClass =
-              PRIORITY_BADGE[priorityKey] ?? 'bg-gray-800 border-gray-600 text-gray-200';
+              PRIORITY_BADGE[priorityKey] ?? 'bg-gray-800/60 border-gray-600 text-gray-200';
+            const hasNotes = !!(todo.notes && todo.notes.trim());
             const isEditing = editingId === todo.id;
             const overdue = !!todo.dueAt && !todo.completed && todo.dueAt < Date.now();
             const dueLabel = todo.dueAt
@@ -126,6 +132,7 @@ export default function TodoList({
                 className={`group rounded-xl border ${borderClass} bg-gray-800/95 p-3 transition-colors shadow-sm ${
                   todo.completed ? 'opacity-60' : ''
                 }`}
+                onDoubleClick={() => !isEditing && !todo.completed && beginEdit(todo)}
               >
                 <div className="flex items-start gap-3">
                   <button
@@ -184,7 +191,7 @@ export default function TodoList({
                         </div>
                       )}
                     </div>
-                    <div className="mt-2 flex flex-col gap-2 text-xs text-gray-300 sm:flex-row sm:items-center">
+                    <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-gray-300">
                       {isEditing ? (
                         <>
                           <CategoryPopoverButton
@@ -246,26 +253,18 @@ export default function TodoList({
                                 {priorityGlyph(priorityKey)}
                               </span>
                             </span>
+                            {hasNotes && <NotesPreview notes={todo.notes} />}
                           </div>
-                          <div className="ml-auto flex min-w-[72px] flex-shrink-0 items-center justify-end gap-1 text-sm">
-                            <button
-                              onClick={() => !todo.completed && beginEdit(todo)}
-                              disabled={todo.completed || disabled}
-                              className="px-2 text-gray-400 opacity-0 transition-opacity duration-150 group-hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-30"
-                              title="Edit"
-                            >
-                              <Icon name="edit" />
-                              <span className="sr-only">Edit</span>
-                            </button>
-                            <button
-                              onClick={() => !todo.completed && !disabled && onRequestDelete(todo)}
-                              disabled={todo.completed || disabled}
-                              className="px-2 text-red-300 opacity-0 transition-opacity duration-150 group-hover:opacity-100 disabled:cursor-not-allowed disabled:opacity-30"
-                              title="Delete"
-                            >
-                              <Icon name="trash" />
-                              <span className="sr-only">Delete</span>
-                            </button>
+                          <div className="ml-auto flex items-center gap-2 text-xs">
+                            {!disabled && (
+                              <button
+                                type="button"
+                                onClick={() => onRequestDelete(todo)}
+                                className="rounded-full border border-red-600 px-3 py-1 text-red-200 transition-colors hover:bg-red-600/20"
+                              >
+                                Delete
+                              </button>
+                            )}
                           </div>
                         </>
                       )}
@@ -296,6 +295,56 @@ export default function TodoList({
   );
 }
 
+function NotesPreview({ notes = '' }) {
+  const trimmed = (notes || '').trim();
+  const [open, setOpen] = useState(false);
+  const buttonRef = useRef(null);
+  const popoverRef = useRef(null);
+  const style = useAnchoredPosition(open, buttonRef, popoverRef, {
+    width: 260,
+    deps: [trimmed],
+  });
+
+  useEffect(() => {
+    if (!open) return undefined;
+    const handleClick = (event) => {
+      if (buttonRef.current?.contains(event.target)) return;
+      if (popoverRef.current?.contains(event.target)) return;
+      setOpen(false);
+    };
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [open]);
+
+  if (!trimmed) return null;
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        ref={buttonRef}
+        onClick={() => setOpen((value) => !value)}
+        className={`flex h-8 w-8 items-center justify-center rounded-full border border-gray-700 bg-gray-800 text-gray-200 transition-colors hover:border-gray-500 ${
+          open ? 'border-blue-500 text-blue-100' : ''
+        }`}
+        aria-expanded={open}
+      >
+        <Icon name="notes" className="h-4 w-4" />
+        <span className="sr-only">Show additional context</span>
+      </button>
+      {open && (
+        <div
+          ref={popoverRef}
+          style={style ?? { visibility: 'hidden' }}
+          className="fixed z-50 mt-2 w-64 max-w-sm rounded-lg border border-gray-700 bg-gray-900 p-3 text-sm text-gray-100 shadow-xl"
+        >
+          <p className="whitespace-pre-wrap break-words text-gray-200">{trimmed}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 TodoList.propTypes = {
   todos: PropTypes.arrayOf(
     PropTypes.shape({
@@ -304,6 +353,7 @@ TodoList.propTypes = {
       category: PropTypes.string,
       dueAt: PropTypes.number,
       priority: PropTypes.string,
+      notes: PropTypes.string,
       completed: PropTypes.bool.isRequired,
       createdAt: PropTypes.number.isRequired,
     }),
@@ -317,7 +367,6 @@ TodoList.propTypes = {
   busyAction: PropTypes.string,
 };
 
-TodoList.defaultProps = {
-  disabled: false,
-  busyAction: null,
+NotesPreview.propTypes = {
+  notes: PropTypes.string,
 };

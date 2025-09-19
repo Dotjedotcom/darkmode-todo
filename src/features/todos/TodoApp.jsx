@@ -2,12 +2,10 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import Icon from '@/components/Icon.jsx';
 import HeaderBar from './components/HeaderBar.jsx';
 import AddTodoForm from './components/AddTodoForm.jsx';
-import TodoFilters from './components/TodoFilters.jsx';
 import TodoUtilities from './components/TodoUtilities.jsx';
 import TodoList from './components/TodoList.jsx';
 import ConfirmDialog from './components/ConfirmDialog.jsx';
 import InfoDialog from './components/InfoDialog.jsx';
-import CategoryFilterRow from './components/CategoryFilterRow.jsx';
 import {
   subscribeToServiceWorkerUpdate,
   applyServiceWorkerUpdate,
@@ -16,6 +14,7 @@ import {
 } from '@/services/serviceWorker.js';
 import { useTodoStore, useTodos, usePendingCount, useStorageReady } from './store/useTodoStore.js';
 import { DEFAULT_CATEGORIES } from '../../utils/category.js';
+import { normalizePriority } from '../../utils/priority.js';
 
 const ACTION_LABELS = {
   add: 'Adding todo…',
@@ -44,7 +43,7 @@ export default function TodoApp() {
   const [errorMsg, setErrorMsg] = useState('');
   const [infoMsg, setInfoMsg] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
-  const [filterCategory, setFilterCategory] = useState('');
+  const [filterCategories, setFilterCategories] = useState([]);
   const [search, setSearch] = useState('');
   const [sortMode, setSortMode] = useState('default');
   const [confirmKind, setConfirmKind] = useState(null);
@@ -147,16 +146,23 @@ export default function TodoApp() {
     }
   }, [showAdvanced]);
 
-  const categoryOptions = useMemo(() => {
-    const derived = todos.map((todo) => (todo.category || '').trim()).filter(Boolean);
-    return Array.from(new Set([...DEFAULT_CATEGORIES, ...derived]));
+  const usedCategories = useMemo(() => {
+    return Array.from(new Set(todos.map((todo) => (todo.category || '').trim()).filter(Boolean)));
   }, [todos]);
 
+  const categoryOptions = useMemo(() => {
+    return Array.from(new Set([...DEFAULT_CATEGORIES, ...usedCategories]));
+  }, [usedCategories]);
+
   const filteredTodos = useMemo(() => {
+    const normalized = filterCategories.map((entry) => entry.trim()).filter(Boolean);
     return todos.filter((todo) => {
       if (filterStatus === 'active' && todo.completed) return false;
       if (filterStatus === 'completed' && !todo.completed) return false;
-      if (filterCategory && (todo.category || '').trim() !== filterCategory.trim()) return false;
+      if (normalized.length) {
+        const category = (todo.category || '').trim();
+        if (!normalized.includes(category)) return false;
+      }
       if (
         search &&
         !`${todo.text} ${todo.category || ''}`.toLowerCase().includes(search.toLowerCase())
@@ -165,7 +171,20 @@ export default function TodoApp() {
       }
       return true;
     });
-  }, [todos, filterStatus, filterCategory, search]);
+  }, [todos, filterStatus, filterCategories, search]);
+
+  useEffect(() => {
+    setFilterCategories((current) => {
+      const filtered = current.filter((name) => usedCategories.includes(name));
+      if (
+        filtered.length === current.length &&
+        filtered.every((value, index) => value === current[index])
+      ) {
+        return current;
+      }
+      return filtered;
+    });
+  }, [usedCategories]);
 
   const sortedTodos = useMemo(() => {
     const list = [...filteredTodos];
@@ -181,10 +200,11 @@ export default function TodoApp() {
         return a.createdAt - b.createdAt;
       }
       if (sortMode === 'priority') {
-        const order = { high: 0, normal: 1, low: 2 };
+        const order = { urgent: 0, high: 1, medium: 2, low: 3, veryLow: 4 };
         if ((a.completed ? 1 : 0) !== (b.completed ? 1 : 0)) return a.completed ? 1 : -1;
         return (
-          order[a.priority || 'normal'] - order[b.priority || 'normal'] || a.createdAt - b.createdAt
+          order[normalizePriority(a.priority)] - order[normalizePriority(b.priority)] ||
+          a.createdAt - b.createdAt
         );
       }
       return a.completed === b.completed ? a.createdAt - b.createdAt : a.completed ? 1 : -1;
@@ -225,12 +245,18 @@ export default function TodoApp() {
     setUpdateRegistration(null);
   }
 
-  async function handleAddTodo({ text, category, dueInput, priority }) {
+  async function handleAddTodo({ text, category, dueInput, priority, notes }) {
     const trimmed = text.trim();
     if (!trimmed) return false;
     try {
       await runAction('add', 'Failed to add todo.', () =>
-        addTodoToStore({ text: trimmed, category, dueInput, priority }),
+        addTodoToStore({
+          text: trimmed,
+          category,
+          dueInput,
+          priority: normalizePriority(priority),
+          notes,
+        }),
       );
       return true;
     } catch {
@@ -254,12 +280,18 @@ export default function TodoApp() {
     }
   }
 
-  async function handleUpdateTodo(id, { text, category, dueInput, priority }) {
+  async function handleUpdateTodo(id, { text, category, dueInput, priority, notes }) {
     const trimmed = text.trim();
     if (!trimmed) return false;
     try {
       const updated = await runAction('update', 'Failed to save edit.', () =>
-        updateTodoInStore(id, { text: trimmed, category, dueInput, priority }),
+        updateTodoInStore(id, {
+          text: trimmed,
+          category,
+          dueInput,
+          priority: normalizePriority(priority),
+          notes,
+        }),
       );
       return !!updated;
     } catch {
@@ -334,16 +366,11 @@ export default function TodoApp() {
                   ? null
                   : Number(record.dueAt)
                 : null;
-            const priority =
-              record &&
-              (record.priority === 'low' ||
-                record.priority === 'normal' ||
-                record.priority === 'high')
-                ? record.priority
-                : 'normal';
+            const priority = normalizePriority(record?.priority);
             const completed = !!(record && record.completed);
             const createdAt =
               record && typeof record.createdAt === 'number' ? record.createdAt : Date.now();
+            const notes = record && typeof record.notes === 'string' ? record.notes : '';
             return {
               text: safeText,
               category: safeCategory,
@@ -351,6 +378,7 @@ export default function TodoApp() {
               priority,
               completed,
               createdAt,
+              notes,
             };
           })
           .filter((item) => item.text.trim().length > 0);
@@ -414,9 +442,10 @@ export default function TodoApp() {
           text: todo.text,
           category: todo.category || '',
           dueAt: typeof todo.dueAt === 'number' ? todo.dueAt : null,
-          priority: todo.priority || 'normal',
+          priority: normalizePriority(todo.priority),
           completed: !!todo.completed,
           createdAt: todo.createdAt || Date.now(),
+          notes: todo.notes || '',
         })),
       };
       const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
@@ -559,43 +588,31 @@ export default function TodoApp() {
         disabled={interactionsDisabled}
         busyAction={busyAction}
       />
-      <div className="w-full max-w-3xl flex-1 flex flex-col gap-4 overflow-hidden">
-        <div className="flex-shrink-0">
-          <TodoFilters
-            search={search}
-            onSearchChange={setSearch}
-            filterStatus={filterStatus}
-            onFilterStatusChange={setFilterStatus}
-            sortMode={sortMode}
-            onSortModeChange={setSortMode}
-            onRequestReset={() => {
-              setFilterStatus('all');
-              setFilterCategory('');
-            }}
-            disabled={interactionsDisabled}
-          />
-        </div>
-        <div className="flex-shrink-0">
-          <TodoUtilities
-            ref={utilitiesPanelRef}
-            visible={showUtilities}
-            totalCount={totalCount}
-            completedCount={completedCount}
-            onConfirmRequest={setConfirmKind}
-            onDismiss={() => setShowUtilities(false)}
-            disabled={interactionsDisabled}
-            busyAction={busyAction}
-          />
-        </div>
-        <div className="w-full max-w-3xl">
-          <CategoryFilterRow
-            categories={categoryOptions}
-            activeCategory={filterCategory}
-            onSelectCategory={setFilterCategory}
-            disabled={interactionsDisabled}
-          />
-        </div>
-        <div className="flex-1 overflow-hidden">
+      <div className="w-full max-w-3xl flex-1 min-h-0 flex flex-col gap-4 overflow-hidden">
+        <TodoUtilities
+          ref={utilitiesPanelRef}
+          visible={showUtilities}
+          totalCount={totalCount}
+          completedCount={completedCount}
+          onConfirmRequest={setConfirmKind}
+          onDismiss={() => setShowUtilities(false)}
+          search={search}
+          onSearchChange={setSearch}
+          filterStatus={filterStatus}
+          onFilterStatusChange={setFilterStatus}
+          sortMode={sortMode}
+          onSortModeChange={setSortMode}
+          categoryOptions={usedCategories}
+          selectedCategories={filterCategories}
+          onSelectedCategoriesChange={setFilterCategories}
+          onResetFilters={() => {
+            setFilterStatus('all');
+            setFilterCategories([]);
+          }}
+          disabled={interactionsDisabled}
+          busyAction={busyAction}
+        />
+        <div className="flex-1 min-h-0 overflow-hidden">
           <TodoList
             todos={sortedTodos}
             onToggleTodo={handleToggleTodo}

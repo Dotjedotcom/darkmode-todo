@@ -13,10 +13,10 @@ export default function HeaderBar({
   replaceOnImport,
   onReplaceOnImportChange,
   onShowInfo,
-  canInstall,
-  onInstallApp,
-  updateAvailable,
-  onUpdateApp,
+  canInstall = false,
+  onInstallApp = () => {},
+  updateAvailable = false,
+  onUpdateApp = () => {},
 }) {
   const [showShareMenu, setShowShareMenu] = useState(false);
   const [showHelpMenu, setShowHelpMenu] = useState(false);
@@ -252,11 +252,4 @@ HeaderBar.propTypes = {
   onInstallApp: PropTypes.func,
   updateAvailable: PropTypes.bool,
   onUpdateApp: PropTypes.func,
-};
-
-HeaderBar.defaultProps = {
-  canInstall: false,
-  onInstallApp: undefined,
-  updateAvailable: false,
-  onUpdateApp: undefined,
 };

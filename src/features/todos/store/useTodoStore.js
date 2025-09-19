@@ -4,7 +4,8 @@
  * @property {string} text
  * @property {string} [category]
  * @property {number|null} [dueAt]
- * @property {('low'|'normal'|'high')} [priority]
+ * @property {('veryLow'|'low'|'medium'|'high'|'urgent')} [priority]
+ * @property {string} [notes]
  * @property {boolean} completed
  * @property {number} createdAt
  */
@@ -21,6 +22,7 @@
 import { create } from 'zustand';
 import { createSafeStorage } from '../../../services/storage.js';
 import { parseDateLocal } from '../../../utils/date.js';
+import { normalizePriority } from '../../../utils/priority.js';
 
 export const useTodoStore = create((set, get) => ({
   storage: null,
@@ -35,7 +37,12 @@ export const useTodoStore = create((set, get) => ({
     const promise = (async () => {
       const resolvedStorage = await storageFactory();
       const existing = await resolvedStorage.getAll();
-      set({ storage: resolvedStorage, todos: existing, storageReady: true });
+      const normalized = existing.map((todo) => ({
+        ...todo,
+        priority: normalizePriority(todo.priority),
+        notes: typeof todo.notes === 'string' ? todo.notes : '',
+      }));
+      set({ storage: resolvedStorage, todos: normalized, storageReady: true });
       return resolvedStorage;
     })();
     set({ initPromise: promise });
@@ -45,7 +52,7 @@ export const useTodoStore = create((set, get) => ({
       set((state) => (state.initPromise === promise ? { initPromise: null } : {}));
     }
   },
-  async addTodo({ text, category, dueInput, priority }) {
+  async addTodo({ text, category, dueInput, priority, notes }) {
     const { storage } = get();
     if (!storage) throw new Error('Storage not ready');
     const dueAt = parseDateLocal(dueInput);
@@ -53,7 +60,8 @@ export const useTodoStore = create((set, get) => ({
       text,
       category: (category || '').trim(),
       dueAt,
-      priority: priority || 'normal',
+      priority: normalizePriority(priority),
+      notes: (notes || '').trim(),
       completed: false,
       createdAt: Date.now(),
     });
@@ -77,7 +85,7 @@ export const useTodoStore = create((set, get) => ({
     await storage.delete(id);
     set((state) => ({ todos: state.todos.filter((todo) => todo.id !== id) }));
   },
-  async updateTodo(id, { text, category, dueInput, priority }) {
+  async updateTodo(id, { text, category, dueInput, priority, notes }) {
     const { storage } = get();
     if (!storage) throw new Error('Storage not ready');
     const dueAt = parseDateLocal(dueInput);
@@ -85,7 +93,8 @@ export const useTodoStore = create((set, get) => ({
       text,
       category: (category || '').trim(),
       dueAt,
-      priority: priority || 'normal',
+      priority: normalizePriority(priority),
+      notes: (notes || '').trim(),
     });
     if (!updated) return null;
     set((state) => ({
@@ -121,7 +130,15 @@ export const useTodoStore = create((set, get) => ({
   async addMany(items) {
     const { storage } = get();
     if (!storage) throw new Error('Storage not ready');
-    const added = await Promise.all(items.map((item) => storage.add(item)));
+    const added = await Promise.all(
+      items.map((item) =>
+        storage.add({
+          ...item,
+          priority: normalizePriority(item.priority),
+          notes: typeof item.notes === 'string' ? item.notes : '',
+        }),
+      ),
+    );
     set((state) => ({ todos: [...state.todos, ...added] }));
     return added;
   },
@@ -129,7 +146,15 @@ export const useTodoStore = create((set, get) => ({
     const { storage } = get();
     if (!storage) throw new Error('Storage not ready');
     await storage.clearAll();
-    const added = await Promise.all(items.map((item) => storage.add(item)));
+    const added = await Promise.all(
+      items.map((item) =>
+        storage.add({
+          ...item,
+          priority: normalizePriority(item.priority),
+          notes: typeof item.notes === 'string' ? item.notes : '',
+        }),
+      ),
+    );
     set({ todos: added });
     return added;
   },

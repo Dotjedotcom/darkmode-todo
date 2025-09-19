@@ -16,14 +16,14 @@ export default function AddTodoForm({
   onToggleAdvanced,
   showUtilities,
   onToggleUtilities,
-  utilitiesButtonRef,
+  utilitiesButtonRef = undefined,
   disabled = false,
   busyAction = null,
 }) {
   const [text, setText] = useState('');
   const [category, setCategory] = useState('');
   const [due, setDue] = useState('');
-  const [priority, setPriority] = useState('normal');
+  const [priority, setPriority] = useState('medium');
   const [notes, setNotes] = useState('');
   const inputRef = useRef(null);
 
@@ -52,7 +52,7 @@ export default function AddTodoForm({
       setText('');
       setCategory('');
       setDue(defaultDateLocal());
-      setPriority('normal');
+      setPriority('medium');
       setNotes('');
     }
   }
@@ -109,7 +109,7 @@ export default function AddTodoForm({
         <span className="sr-only">Toggle utilities</span>
       </button>
       {showAdvanced && (
-        <div id="options" className="w-full max-w-3xl flex flex-wrap gap-2 mb-0">
+        <div id="options" className="w-full max-w-3xl flex flex-wrap">
           <CategoryPopoverButton
             value={category}
             onChange={setCategory}
@@ -135,10 +135,4 @@ AddTodoForm.propTypes = {
   utilitiesButtonRef: PropTypes.shape({ current: PropTypes.any }),
   disabled: PropTypes.bool,
   busyAction: PropTypes.string,
-};
-
-AddTodoForm.defaultProps = {
-  disabled: false,
-  busyAction: null,
-  utilitiesButtonRef: undefined,
 };

@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types';
 
-export default function InfoDialog({ kind, onClose }) {
+export default function InfoDialog({ kind = null, onClose }) {
   if (!kind) return null;
 
   const isHelp = kind === 'help';
@@ -48,8 +48,4 @@ export default function InfoDialog({ kind, onClose }) {
 InfoDialog.propTypes = {
   kind: PropTypes.oneOf(['help', 'about', null]),
   onClose: PropTypes.func.isRequired,
-};
-
-InfoDialog.defaultProps = {
-  kind: null,
 };

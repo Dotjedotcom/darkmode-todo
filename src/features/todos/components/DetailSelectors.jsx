@@ -2,11 +2,16 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import Icon from '../../../components/Icon.jsx';
 import { fuzzyFilter } from '../../../utils/fuzzy.js';
-import { priorityLabel } from '../../../utils/priority.js';
+import {
+  priorityLabel,
+  normalizePriority,
+  PRIORITY_SCALE,
+  priorityGlyph,
+} from '../../../utils/priority.js';
 import { categoryIcon } from '../../../utils/category.js';
 import useAnchoredPosition from '../../../hooks/useAnchoredPosition.js';
 
-const PRIORITY_OPTIONS = ['low', 'normal', 'high'];
+const PRIORITY_OPTIONS = PRIORITY_SCALE;
 
 function usePopover(open, setOpen, containerRef) {
   useEffect(() => {
@@ -27,7 +32,7 @@ function usePopover(open, setOpen, containerRef) {
   }, [open, setOpen, containerRef]);
 }
 
-export function CategoryPopoverButton({ value, onChange, options, disabled }) {
+export function CategoryPopoverButton({ value = '', onChange, options, disabled = false }) {
   const containerRef = useRef(null);
   const anchorRef = useRef(null);
   const popoverRef = useRef(null);
@@ -140,12 +145,7 @@ CategoryPopoverButton.propTypes = {
   disabled: PropTypes.bool,
 };
 
-CategoryPopoverButton.defaultProps = {
-  value: '',
-  disabled: false,
-};
-
-export function DatePopoverButton({ value, onChange, disabled }) {
+export function DatePopoverButton({ value = '', onChange, disabled = false }) {
   const containerRef = useRef(null);
   const anchorRef = useRef(null);
   const popoverRef = useRef(null);
@@ -215,17 +215,12 @@ DatePopoverButton.propTypes = {
   disabled: PropTypes.bool,
 };
 
-DatePopoverButton.defaultProps = {
-  value: '',
-  disabled: false,
-};
-
-export function PriorityPopoverButton({ value, onChange, disabled }) {
+export function PriorityPopoverButton({ value = 'medium', onChange, disabled = false }) {
   const containerRef = useRef(null);
   const anchorRef = useRef(null);
   const popoverRef = useRef(null);
   const [open, setOpen] = useState(false);
-  const current = value || 'normal';
+  const current = normalizePriority(value) || 'medium';
 
   usePopover(open, setOpen, containerRef);
   const popoverStyle = useAnchoredPosition(open, anchorRef, popoverRef, {
@@ -263,7 +258,12 @@ export function PriorityPopoverButton({ value, onChange, disabled }) {
                 setOpen(false);
               }}
             >
-              {priorityLabel(option)}
+              <span className="flex items-center gap-2">
+                <span className="text-lg" aria-hidden="true">
+                  {priorityGlyph(option)}
+                </span>
+                {priorityLabel(option)}
+              </span>
               {option === current && <Icon name="check" className="h-3 w-3" />}
             </button>
           ))}
@@ -273,7 +273,7 @@ export function PriorityPopoverButton({ value, onChange, disabled }) {
   );
 }
 
-export function NotesPopoverButton({ value, onChange, disabled }) {
+export function NotesPopoverButton({ value = '', onChange, disabled = false }) {
   const containerRef = useRef(null);
   const anchorRef = useRef(null);
   const popoverRef = useRef(null);
@@ -350,18 +350,8 @@ NotesPopoverButton.propTypes = {
   disabled: PropTypes.bool,
 };
 
-NotesPopoverButton.defaultProps = {
-  value: '',
-  disabled: false,
-};
-
 PriorityPopoverButton.propTypes = {
   value: PropTypes.string,
   onChange: PropTypes.func.isRequired,
   disabled: PropTypes.bool,
-};
-
-PriorityPopoverButton.defaultProps = {
-  value: 'normal',
-  disabled: false,
 };

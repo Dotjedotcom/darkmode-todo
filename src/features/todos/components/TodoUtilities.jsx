@@ -1,6 +1,8 @@
 import { forwardRef } from 'react';
 import PropTypes from 'prop-types';
 import Icon from '../../../components/Icon.jsx';
+import TodoFilters from './TodoFilters.jsx';
+import CategoryFilterMenu from './CategoryFilterMenu.jsx';
 
 const TodoUtilities = forwardRef(function TodoUtilities(
   {
@@ -8,7 +10,17 @@ const TodoUtilities = forwardRef(function TodoUtilities(
     totalCount,
     completedCount,
     onConfirmRequest,
-    onDismiss,
+    onDismiss = () => {},
+    search,
+    onSearchChange,
+    filterStatus,
+    onFilterStatusChange,
+    sortMode,
+    onSortModeChange,
+    categoryOptions,
+    selectedCategories = [],
+    onSelectedCategoriesChange = () => {},
+    onResetFilters,
     disabled = false,
     busyAction = null,
   },
@@ -19,114 +31,94 @@ const TodoUtilities = forwardRef(function TodoUtilities(
   const isToggleAll = busyAction === 'toggleAll';
   const isClearingCompleted = busyAction === 'clearCompleted';
   const isClearingAll = busyAction === 'clearAll';
-  const pendingCount = Math.max(0, totalCount - completedCount);
+  const hasCategoryFilters = selectedCategories.length > 0;
 
-  const handleDismiss = () => {
-    if (typeof onDismiss === 'function') {
-      onDismiss();
+  const handleResetFilters = () => {
+    if (typeof onResetFilters === 'function') {
+      onResetFilters();
+    } else {
+      onFilterStatusChange('all');
+      onSelectedCategoriesChange([]);
     }
   };
+
+  const actionButtons = [
+    {
+      key: 'toggleAll',
+      icon: 'toggle',
+      label: 'Toggle all',
+      disabled: disabled,
+      busy: isToggleAll,
+    },
+    {
+      key: 'clearCompleted',
+      icon: 'broom',
+      label: 'Clear completed',
+      disabled: disabled || completedCount === 0,
+      busy: isClearingCompleted,
+    },
+    {
+      key: 'clearAll',
+      icon: 'trash',
+      label: 'Clear all',
+      disabled: disabled || totalCount === 0,
+      busy: isClearingAll,
+    },
+  ];
 
   return (
     <div
       ref={ref}
-      id="utility"
-      className="grid w-full max-w-3xl gap-3 md:grid-cols-3"
+      className="w-full max-w-3xl space-y-3 flex-none"
       aria-busy={busyAction ? 'true' : 'false'}
     >
-      <UtilityButton
-        icon="toggle"
-        label="Toggle all"
-        description="Flip every todo between done and pending"
-        onClick={() => {
-          onConfirmRequest('toggleAll');
-          handleDismiss();
-        }}
+      <TodoFilters
+        search={search}
+        onSearchChange={onSearchChange}
+        filterStatus={filterStatus}
+        onFilterStatusChange={onFilterStatusChange}
+        sortMode={sortMode}
+        onSortModeChange={onSortModeChange}
+        hasCategoryFilters={hasCategoryFilters}
+        onRequestReset={handleResetFilters}
         disabled={disabled}
-        busy={isToggleAll}
       />
-      <UtilityButton
-        icon="broom"
-        label="Clear completed"
-        description="Remove finished todos"
-        onClick={() => {
-          onConfirmRequest('clearCompleted');
-          handleDismiss();
-        }}
-        disabled={disabled || completedCount === 0}
-        busy={isClearingCompleted}
-      />
-      <UtilityButton
-        icon="trash"
-        label="Clear all"
-        description="Start with an empty list"
-        onClick={() => {
-          onConfirmRequest('clearAll');
-          handleDismiss();
-        }}
-        disabled={disabled || totalCount === 0}
-        busy={isClearingAll}
-      />
-      <SummaryCard total={totalCount} pending={pendingCount} completed={completedCount} />
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="flex-1 min-w-[220px]">
+          <CategoryFilterMenu
+            categories={categoryOptions}
+            selected={selectedCategories}
+            onChange={onSelectedCategoriesChange}
+            disabled={disabled}
+          />
+        </div>
+        <div className="ml-auto flex items-center gap-2">
+          {actionButtons.map((action) => (
+            <button
+              key={action.key}
+              type="button"
+              onClick={() => {
+                if (disabled || action.disabled) return;
+                onConfirmRequest(action.key);
+                onDismiss();
+              }}
+              disabled={action.disabled}
+              title={action.label}
+              className={`flex h-9 w-9 items-center justify-center rounded-full border border-gray-700 bg-gray-900 text-gray-200 transition-colors hover:border-gray-500 ${
+                action.disabled ? 'cursor-not-allowed opacity-50' : ''
+              } ${action.busy ? 'cursor-wait opacity-80' : ''}`}
+            >
+              <Icon name={action.icon} className="h-4 w-4" />
+              <span className="sr-only">{action.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
     </div>
   );
 });
 
 export default TodoUtilities;
-
-function UtilityButton({ icon, label, description, onClick, disabled, busy }) {
-  return (
-    <button
-      type="button"
-      onClick={() => !disabled && onClick()}
-      className={`flex h-full flex-col items-start gap-2 rounded-xl border px-3 py-3 text-left transition-colors ${
-        disabled
-          ? 'cursor-not-allowed border-gray-700 bg-gray-900 text-gray-500 opacity-50'
-          : 'border-red-700 bg-gray-900 text-red-200 hover:border-red-500'
-      } ${busy ? 'cursor-wait' : ''}`}
-      disabled={disabled}
-    >
-      <span className="flex items-center gap-2 text-sm font-semibold">
-        <Icon name={icon} />
-        {label}
-      </span>
-      <span className="text-xs text-red-200/80">{description}</span>
-    </button>
-  );
-}
-
-function SummaryCard({ total, pending, completed }) {
-  return (
-    <div className="rounded-xl border border-gray-700 bg-gray-800/80 p-3 text-sm text-gray-200">
-      <p className="mb-1 flex items-center gap-2 text-gray-100">
-        <Icon name="info" className="h-3.5 w-3.5" /> Summary
-      </p>
-      <p>Total tasks: {total}</p>
-      <p>Pending: {pending}</p>
-      <p>Completed: {completed}</p>
-    </div>
-  );
-}
-
-UtilityButton.propTypes = {
-  icon: PropTypes.string.isRequired,
-  label: PropTypes.string.isRequired,
-  description: PropTypes.string.isRequired,
-  onClick: PropTypes.func.isRequired,
-  disabled: PropTypes.bool,
-  busy: PropTypes.bool,
-};
-
-UtilityButton.defaultProps = {
-  disabled: false,
-  busy: false,
-};
-
-SummaryCard.propTypes = {
-  total: PropTypes.number.isRequired,
-  pending: PropTypes.number.isRequired,
-  completed: PropTypes.number.isRequired,
-};
 
 TodoUtilities.propTypes = {
   visible: PropTypes.bool.isRequired,
@@ -134,12 +126,16 @@ TodoUtilities.propTypes = {
   completedCount: PropTypes.number.isRequired,
   onConfirmRequest: PropTypes.func.isRequired,
   onDismiss: PropTypes.func,
+  search: PropTypes.string.isRequired,
+  onSearchChange: PropTypes.func.isRequired,
+  filterStatus: PropTypes.oneOf(['all', 'active', 'completed']).isRequired,
+  onFilterStatusChange: PropTypes.func.isRequired,
+  sortMode: PropTypes.oneOf(['default', 'due', 'created', 'priority']).isRequired,
+  onSortModeChange: PropTypes.func.isRequired,
+  categoryOptions: PropTypes.arrayOf(PropTypes.string).isRequired,
+  selectedCategories: PropTypes.arrayOf(PropTypes.string).isRequired,
+  onSelectedCategoriesChange: PropTypes.func.isRequired,
+  onResetFilters: PropTypes.func,
   disabled: PropTypes.bool,
   busyAction: PropTypes.string,
-};
-
-TodoUtilities.defaultProps = {
-  onDismiss: undefined,
-  disabled: false,
-  busyAction: null,
 };

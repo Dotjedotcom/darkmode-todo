@@ -1,23 +1,49 @@
-export function priorityLabel(priority) {
+export const PRIORITY_SCALE = ['veryLow', 'low', 'medium', 'high', 'urgent'];
+
+export function normalizePriority(priority) {
+  if (!priority) return 'medium';
+  if (PRIORITY_SCALE.includes(priority)) return priority;
   switch (priority) {
     case 'low':
-      return '🧘 Chill';
+      return 'low';
     case 'normal':
-      return '⚖️ Steady';
+      return 'medium';
     case 'high':
-      return '🔥 Hot';
+      return 'high';
     default:
-      return priority || 'Steady';
+      return 'medium';
+  }
+}
+
+export function priorityLabel(priority) {
+  switch (normalizePriority(priority)) {
+    case 'veryLow':
+      return '🌱 Very Low';
+    case 'low':
+      return '🧘 Low';
+    case 'medium':
+      return '⚖️ Medium';
+    case 'high':
+      return '🔥 High';
+    case 'urgent':
+      return '🚨 Urgent';
+    default:
+      return '⚖️ Medium';
   }
 }
 
 export function priorityGlyph(priority) {
-  switch (priority) {
+  switch (normalizePriority(priority)) {
+    case 'veryLow':
+      return '🌱';
     case 'low':
       return '🧘';
+    case 'medium':
+      return '⚖️';
     case 'high':
       return '🔥';
-    case 'normal':
+    case 'urgent':
+      return '🚨';
     default:
       return '⚖️';
   }

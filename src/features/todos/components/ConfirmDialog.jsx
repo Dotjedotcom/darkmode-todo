@@ -2,10 +2,10 @@ import PropTypes from 'prop-types';
 
 export default function ConfirmDialog({
   open,
-  kind,
+  kind = null,
   completedCount,
-  pendingImport,
-  pendingDelete,
+  pendingImport = null,
+  pendingDelete = null,
   onCancel,
   onConfirm,
   disabled = false,
@@ -99,11 +99,4 @@ ConfirmDialog.propTypes = {
   onCancel: PropTypes.func.isRequired,
   onConfirm: PropTypes.func.isRequired,
   disabled: PropTypes.bool,
-};
-
-ConfirmDialog.defaultProps = {
-  kind: null,
-  pendingImport: null,
-  pendingDelete: null,
-  disabled: false,
 };

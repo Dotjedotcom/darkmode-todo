@@ -23,6 +23,7 @@ export default function TodoFilters({
   onFilterStatusChange,
   sortMode,
   onSortModeChange,
+  hasCategoryFilters = false,
   onRequestReset,
   disabled = false,
 }) {
@@ -66,7 +67,15 @@ export default function TodoFilters({
     () => STATUS_OPTIONS.find((option) => option.value === filterStatus)?.label ?? 'All tasks',
     [filterStatus],
   );
-  const hasActiveFilters = filterStatus !== 'all';
+
+  const summaryParts = useMemo(() => {
+    const parts = [sortSummary];
+    if (filterStatus !== 'all') parts.push(statusSummary);
+    if (hasCategoryFilters) parts.push('Categories');
+    return parts;
+  }, [sortSummary, statusSummary, filterStatus, hasCategoryFilters]);
+
+  const hasActiveFilters = filterStatus !== 'all' || hasCategoryFilters;
 
   return (
     <div className="grid gap-3 rounded-xl border border-gray-700 bg-gray-800/80 p-3">
@@ -97,10 +106,7 @@ export default function TodoFilters({
             <Icon name="sort" />
             <span className="flex flex-col">
               <span>Sort & Filter</span>
-              <span className="text-xs text-gray-400">
-                {sortSummary}
-                {hasActiveFilters && ` · ${statusSummary}`}
-              </span>
+              <span className="text-xs text-gray-400">{summaryParts.join(' · ')}</span>
             </span>
             {hasActiveFilters && (
               <span className="ml-auto h-2 w-2 rounded-full bg-blue-400" aria-hidden="true" />
@@ -186,11 +192,7 @@ TodoFilters.propTypes = {
   onFilterStatusChange: PropTypes.func.isRequired,
   sortMode: PropTypes.oneOf(['default', 'due', 'created', 'priority']).isRequired,
   onSortModeChange: PropTypes.func.isRequired,
+  hasCategoryFilters: PropTypes.bool,
   onRequestReset: PropTypes.func,
   disabled: PropTypes.bool,
-};
-
-TodoFilters.defaultProps = {
-  onRequestReset: undefined,
-  disabled: false,
 };
