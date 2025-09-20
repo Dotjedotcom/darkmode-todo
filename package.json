@@ -38,8 +38,12 @@
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-react": "^7.34.1",
+<<<<<<< HEAD
     "eslint-plugin-react-hooks": "^4.6.0",
 >>>>>>> a495d41 (Bump eslint-config-prettier from 9.1.2 to 10.1.8)
+=======
+    "eslint-plugin-react-hooks": "^5.2.0",
+>>>>>>> 8026f8f (Bump eslint-plugin-react-hooks from 4.6.2 to 5.2.0)
     "postcss": "^8.4.41",
     "prettier": "^3.3.3",
 <<<<<<< HEAD
