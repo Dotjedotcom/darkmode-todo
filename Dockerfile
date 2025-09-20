@@ -3,11 +3,11 @@
 FROM node:20-alpine AS builder
 WORKDIR /app
 
-# Enable Corepack for Yarn and install dependencies
-RUN corepack enable
+# Enable Corepack and install Yarn CLI
+RUN corepack enable \
+  && corepack prepare yarn@4.10.2 --activate
 
 COPY package.json yarn.lock .yarnrc.yml ./
-COPY .yarn/ .yarn/
 RUN yarn install --immutable
 
 # Build the app
