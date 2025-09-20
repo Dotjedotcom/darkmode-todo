@@ -20,42 +20,24 @@
     "zustand": "^4.5.2"
   },
   "devDependencies": {
-<<<<<<< HEAD
     "@eslint/js": "^9.36.0",
     "@tailwindcss/postcss": "^4.1.13",
-    "@vitejs/plugin-react": "^4.3.1",
-=======
     "@vitejs/plugin-react": "^5.0.3",
->>>>>>> 182f447 (Bump the vite-and-plugins group with 2 updates)
     "autoprefixer": "^10.4.20",
-<<<<<<< HEAD
     "eslint": "^9.35.0",
-    "eslint-config-prettier": "^9.1.0",
+    "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^5.2.0",
     "globals": "^15.12.0",
-=======
-    "eslint": "^8.57.0",
-    "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-react": "^7.34.1",
-<<<<<<< HEAD
-    "eslint-plugin-react-hooks": "^4.6.0",
->>>>>>> a495d41 (Bump eslint-config-prettier from 9.1.2 to 10.1.8)
-=======
-    "eslint-plugin-react-hooks": "^5.2.0",
->>>>>>> 8026f8f (Bump eslint-plugin-react-hooks from 4.6.2 to 5.2.0)
     "postcss": "^8.4.41",
     "prettier": "^3.3.3",
-<<<<<<< HEAD
     "tailwindcss": "^4.1.13",
     "vite": "^5.4.7"
   },
   "packageManager": "yarn@4.10.2",
   "resolutions": {
-    "chalk@npm:^4.0.0": "patch:chalk@npm%3A4.1.2#~/.yarn/patches/chalk-npm-4.1.2-ba8b67ab80.patch"
-=======
-    "tailwindcss": "^3.4.10",
+    "chalk@npm:^4.0.0": "patch:chalk@npm%3A4.1.2#~/.yarn/patches/chalk-npm-4.1.2-ba8b67ab80.patch",
+    "tailwindcss": "^4.1.13",
     "vite": "^7.1.6"
->>>>>>> 182f447 (Bump the vite-and-plugins group with 2 updates)
   }
 }
