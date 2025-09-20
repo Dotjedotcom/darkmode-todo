@@ -80,6 +80,7 @@ export function CategoryPopoverButton({ value = '', onChange, options, disabled 
           ref={popoverRef}
           style={popoverStyle ?? { visibility: 'hidden' }}
           className="fixed z-50 rounded-lg border border-gray-700 bg-gray-900 p-3 shadow-xl"
+          data-editing-surface="true"
         >
           <input
             className="w-full rounded border border-gray-700 bg-gray-800 p-2 text-sm text-gray-100"
@@ -173,6 +174,7 @@ export function DatePopoverButton({ value = '', onChange, disabled = false }) {
           ref={popoverRef}
           style={popoverStyle ?? { visibility: 'hidden' }}
           className="fixed z-50 rounded-lg border border-gray-700 bg-gray-900 p-3 shadow-xl"
+          data-editing-surface="true"
         >
           <input
             type="date"
@@ -244,6 +246,7 @@ export function PriorityPopoverButton({ value = 'medium', onChange, disabled = f
           ref={popoverRef}
           style={popoverStyle ?? { visibility: 'hidden' }}
           className="fixed z-50 rounded-lg border border-gray-700 bg-gray-900 p-2 shadow-xl"
+          data-editing-surface="true"
         >
           {PRIORITY_OPTIONS.map((option) => (
             <button
@@ -306,6 +309,7 @@ export function NotesPopoverButton({ value = '', onChange, disabled = false }) {
           ref={popoverRef}
           style={popoverStyle ?? { visibility: 'hidden' }}
           className="fixed z-50 rounded-lg border border-gray-700 bg-gray-900 p-3 shadow-xl"
+          data-editing-surface="true"
         >
           <textarea
             className="h-32 w-full resize-none rounded border border-gray-700 bg-gray-800 p-2 text-sm text-gray-100"

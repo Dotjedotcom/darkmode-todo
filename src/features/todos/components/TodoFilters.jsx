@@ -24,6 +24,7 @@ export default function TodoFilters({
   sortMode,
   onSortModeChange,
   hasCategoryFilters = false,
+  selectedCategories = [],
   onRequestReset,
   disabled = false,
 }) {
@@ -76,6 +77,14 @@ export default function TodoFilters({
   }, [sortSummary, statusSummary, filterStatus, hasCategoryFilters]);
 
   const hasActiveFilters = filterStatus !== 'all' || hasCategoryFilters;
+  const normalizedCategories = useMemo(
+    () => selectedCategories.map((entry) => entry.trim()).filter(Boolean),
+    [selectedCategories],
+  );
+  const activeStatus = useMemo(
+    () => STATUS_OPTIONS.find((option) => option.value === filterStatus),
+    [filterStatus],
+  );
 
   return (
     <div className="grid gap-3 rounded-xl border border-gray-700 bg-gray-800/80 p-3">
@@ -181,6 +190,25 @@ export default function TodoFilters({
           )}
         </div>
       </div>
+      {(filterStatus !== 'all' || normalizedCategories.length > 0) && (
+        <div className="flex flex-wrap items-center gap-2 text-xs">
+          {filterStatus !== 'all' && activeStatus && (
+            <span className="flex items-center gap-1 rounded-full border border-blue-600 bg-blue-900/40 px-2 py-1 text-blue-200">
+              <Icon name={activeStatus.icon} className="h-3.5 w-3.5" />
+              Status: {activeStatus.label}
+            </span>
+          )}
+          {normalizedCategories.map((category) => (
+            <span
+              key={category}
+              className="flex items-center gap-1 rounded-full border border-purple-600 bg-purple-900/40 px-2 py-1 text-purple-200"
+            >
+              <Icon name="tag" className="h-3 w-3" />
+              {category}
+            </span>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -193,6 +221,7 @@ TodoFilters.propTypes = {
   sortMode: PropTypes.oneOf(['default', 'due', 'created', 'priority']).isRequired,
   onSortModeChange: PropTypes.func.isRequired,
   hasCategoryFilters: PropTypes.bool,
+  selectedCategories: PropTypes.arrayOf(PropTypes.string),
   onRequestReset: PropTypes.func,
   disabled: PropTypes.bool,
 };

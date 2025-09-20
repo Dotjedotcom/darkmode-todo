@@ -5,7 +5,6 @@ export default function ConfirmDialog({
   kind = null,
   completedCount,
   pendingImport = null,
-  pendingDelete = null,
   onCancel,
   onConfirm,
   disabled = false,
@@ -25,11 +24,6 @@ export default function ConfirmDialog({
         message = `Replace current list with ${pendingImport.length} imported item(s)? This cannot be undone.`;
       }
       break;
-    case 'deleteOne':
-      if (pendingDelete) {
-        message = `Delete "${pendingDelete.text}"? This cannot be undone.`;
-      }
-      break;
     case 'toggleAll':
       message = 'Toggle all todos?';
       break;
@@ -47,9 +41,6 @@ export default function ConfirmDialog({
       break;
     case 'importReplace':
       confirmLabel = 'Yes, replace';
-      break;
-    case 'deleteOne':
-      confirmLabel = 'Yes, delete';
       break;
     case 'toggleAll':
       confirmLabel = 'Yes, toggle';
@@ -92,10 +83,6 @@ ConfirmDialog.propTypes = {
       text: PropTypes.string.isRequired,
     }),
   ),
-  pendingDelete: PropTypes.shape({
-    id: PropTypes.number,
-    text: PropTypes.string,
-  }),
   onCancel: PropTypes.func.isRequired,
   onConfirm: PropTypes.func.isRequired,
   disabled: PropTypes.bool,

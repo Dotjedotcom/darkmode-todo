@@ -26,12 +26,14 @@ const TodoUtilities = forwardRef(function TodoUtilities(
   },
   ref,
 ) {
-  if (!visible) return null;
+  const hasCategoryFilters = selectedCategories.length > 0;
+  const hasActiveFilters = filterStatus !== 'all' || hasCategoryFilters;
+
+  if (!visible && !hasActiveFilters) return null;
 
   const isToggleAll = busyAction === 'toggleAll';
   const isClearingCompleted = busyAction === 'clearCompleted';
   const isClearingAll = busyAction === 'clearAll';
-  const hasCategoryFilters = selectedCategories.length > 0;
 
   const handleResetFilters = () => {
     if (typeof onResetFilters === 'function') {
@@ -80,6 +82,7 @@ const TodoUtilities = forwardRef(function TodoUtilities(
         sortMode={sortMode}
         onSortModeChange={onSortModeChange}
         hasCategoryFilters={hasCategoryFilters}
+        selectedCategories={selectedCategories}
         onRequestReset={handleResetFilters}
         disabled={disabled}
       />

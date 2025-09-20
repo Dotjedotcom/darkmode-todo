@@ -20,12 +20,12 @@ const PRIORITY_BORDER = {
   urgent: 'border-red-700',
 };
 
-const PRIORITY_BADGE = {
-  veryLow: 'bg-green-900/40 border-green-700 text-green-200',
-  low: 'bg-emerald-900/40 border-emerald-600 text-emerald-200',
-  medium: 'bg-amber-900/30 border-amber-500 text-amber-200',
-  high: 'bg-orange-900/30 border-orange-600 text-orange-200',
-  urgent: 'bg-red-900/40 border-red-700 text-red-200',
+const PRIORITY_GLYPH_COLOR = {
+  veryLow: 'text-green-300',
+  low: 'text-emerald-300',
+  medium: 'text-amber-300',
+  high: 'text-orange-300',
+  urgent: 'text-red-300',
 };
 
 const DATE_FORMATTER = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' });
@@ -33,7 +33,6 @@ const DATE_FORMATTER = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' 
 export default function TodoList({
   todos,
   onToggleTodo,
-  onRequestDelete,
   onUpdateTodo,
   onDeleteTodo,
   categoryOptions,
@@ -47,6 +46,7 @@ export default function TodoList({
   const [editPriority, setEditPriority] = useState('medium');
   const [editNotes, setEditNotes] = useState('');
   const editInputRef = useRef(null);
+  const swipeStateRef = useRef({ id: null });
 
   useEffect(() => {
     if (editingId != null) {
@@ -97,12 +97,93 @@ export default function TodoList({
     resetEditState();
   }, [resetEditState]);
 
+  const handleSwipeStart = useCallback(
+    (event, todoId, completed, isEditing) => {
+      if (disabled || isEditing) return;
+      if (editingId != null && editingId !== todoId) return;
+      if (event.pointerType === 'mouse' && event.button !== 0) return;
+      const target = event.target;
+      if (target instanceof Element) {
+        if (target.closest('button, input, textarea, select, a, label')) return;
+      }
+      swipeStateRef.current = {
+        id: todoId,
+        pointerId: event.pointerId,
+        startX: event.clientX,
+        startY: event.clientY,
+        completed,
+        cancelled: false,
+      };
+      if (event.currentTarget && typeof event.currentTarget.setPointerCapture === 'function') {
+        event.currentTarget.setPointerCapture(event.pointerId);
+      }
+    },
+    [disabled, editingId],
+  );
+
+  const handleSwipeMove = useCallback((event) => {
+    const state = swipeStateRef.current;
+    if (!state || state.id == null || state.pointerId !== event.pointerId) return;
+    if (state.cancelled) return;
+    const dx = event.clientX - state.startX;
+    const dy = event.clientY - state.startY;
+    if (Math.abs(dy) > Math.abs(dx)) {
+      state.cancelled = true;
+    }
+  }, []);
+
+  const handleSwipeEnd = useCallback(
+    (event, todoId) => {
+      const state = swipeStateRef.current;
+      if (!state || state.id !== todoId || state.pointerId !== event.pointerId) {
+        return;
+      }
+      const dx = event.clientX - state.startX;
+      const dy = event.clientY - state.startY;
+      const absX = Math.abs(dx);
+      const absY = Math.abs(dy);
+      const threshold = 60;
+      if (!state.cancelled && absX > absY && absX >= threshold) {
+        if (dx > 0 && !state.completed) {
+          onToggleTodo(todoId);
+        } else if (dx < 0 && state.completed) {
+          onToggleTodo(todoId);
+        }
+      }
+      if (
+        event.currentTarget &&
+        typeof event.currentTarget.releasePointerCapture === 'function' &&
+        event.currentTarget.hasPointerCapture?.(event.pointerId)
+      ) {
+        event.currentTarget.releasePointerCapture(event.pointerId);
+      }
+      swipeStateRef.current = { id: null };
+    },
+    [onToggleTodo],
+  );
+
+  const handleSwipeCancel = useCallback((event) => {
+    const state = swipeStateRef.current;
+    if (state && state.pointerId === event.pointerId) {
+      if (
+        event.currentTarget &&
+        typeof event.currentTarget.releasePointerCapture === 'function' &&
+        event.currentTarget.hasPointerCapture?.(event.pointerId)
+      ) {
+        event.currentTarget.releasePointerCapture(event.pointerId);
+      }
+      swipeStateRef.current = { id: null };
+    }
+  }, []);
+
   useEffect(() => {
     if (editingId == null) return undefined;
     const handleClick = (event) => {
       const editingNode = document.querySelector('[data-editing="true"]');
       if (!editingNode) return;
       if (editingNode.contains(event.target)) return;
+      const target = event.target instanceof Element ? event.target : null;
+      if (target?.closest('[data-editing-surface="true"]')) return;
       cancelEdit();
     };
     document.addEventListener('mousedown', handleClick);
@@ -116,8 +197,6 @@ export default function TodoList({
           {todos.map((todo) => {
             const priorityKey = normalizePriority(todo.priority);
             const borderClass = PRIORITY_BORDER[priorityKey] ?? 'border-gray-700';
-            const badgeClass =
-              PRIORITY_BADGE[priorityKey] ?? 'bg-gray-800/60 border-gray-600 text-gray-200';
             const hasNotes = !!(todo.notes && todo.notes.trim());
             const isEditing = editingId === todo.id;
             const overdue = !!todo.dueAt && !todo.completed && todo.dueAt < Date.now();
@@ -133,15 +212,33 @@ export default function TodoList({
                   todo.completed ? 'opacity-60' : ''
                 }`}
                 onDoubleClick={() => !isEditing && !todo.completed && beginEdit(todo)}
+                onPointerDown={(event) =>
+                  handleSwipeStart(event, todo.id, !!todo.completed, isEditing)
+                }
+                onPointerMove={handleSwipeMove}
+                onPointerUp={(event) => handleSwipeEnd(event, todo.id)}
+                onPointerCancel={handleSwipeCancel}
+                onPointerLeave={handleSwipeCancel}
               >
                 <div className="flex items-start gap-3">
-                  <button
-                    onClick={() => !disabled && onToggleTodo(todo.id)}
-                    className="flex h-6 w-6 min-w-[1.5rem] items-center justify-center rounded border border-gray-500 bg-gray-900 text-sm text-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
-                    disabled={disabled}
-                  >
-                    {todo.completed ? <Icon name="check" className="h-3.5 w-3.5" /> : ''}
-                  </button>
+                  <div className="flex w-8 flex-col items-center gap-1">
+                    <button
+                      onClick={() => !disabled && onToggleTodo(todo.id)}
+                      className="flex h-6 w-6 min-w-[1.5rem] items-center justify-center rounded border border-gray-500 bg-gray-900 text-sm text-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
+                      disabled={disabled}
+                    >
+                      {todo.completed ? <Icon name="check" className="h-3.5 w-3.5" /> : ''}
+                    </button>
+                    <span
+                      className={`mt-1 text-xl leading-none ${
+                        PRIORITY_GLYPH_COLOR[priorityKey] ?? 'text-gray-300'
+                      }`}
+                      title={priorityLabel(priorityKey)}
+                      aria-label={`Priority ${priorityLabel(priorityKey)}`}
+                    >
+                      {priorityGlyph(priorityKey)}
+                    </span>
+                  </div>
                   <div className="flex-1">
                     <div className="flex items-start gap-2">
                       {isEditing ? (
@@ -217,56 +314,30 @@ export default function TodoList({
                           />
                         </>
                       ) : (
-                        <>
-                          <div className="flex flex-wrap items-center gap-2">
-                            <span
-                              className={`flex h-8 w-8 items-center justify-center rounded-full border ${
-                                todo.category
-                                  ? `${categoryPillClass(todo.category)} text-lg`
-                                  : 'border-gray-700 bg-gray-800/60 text-gray-400'
-                              }`}
-                              title={todo.category || 'Uncategorised'}
-                              aria-label={
-                                todo.category ? `Category ${todo.category}` : 'Uncategorised'
-                              }
-                            >
-                              <span className="text-xl leading-none">
-                                {categoryIcon(todo.category)}
-                              </span>
-                            </span>
-                            <span
-                              className={`flex items-center gap-1 px-2 py-0.5 rounded-full border ${
-                                overdue
-                                  ? 'border-red-500 text-red-200'
-                                  : 'border-gray-700 text-gray-300'
-                              }`}
-                            >
-                              <Icon name="calendar" className="h-3.5 w-3.5" />
-                              {dueLabel}
-                            </span>
-                            <span
-                              className={`flex h-8 w-8 items-center justify-center rounded-full border ${badgeClass}`}
-                              title={priorityLabel(priorityKey)}
-                              aria-label={`Priority ${priorityLabel(priorityKey)}`}
-                            >
-                              <span className="text-xl leading-none">
-                                {priorityGlyph(priorityKey)}
-                              </span>
-                            </span>
-                            {hasNotes && <NotesPreview notes={todo.notes} />}
-                          </div>
-                          <div className="ml-auto flex items-center gap-2 text-xs">
-                            {!disabled && (
-                              <button
-                                type="button"
-                                onClick={() => onRequestDelete(todo)}
-                                className="rounded-full border border-red-600 px-3 py-1 text-red-200 transition-colors hover:bg-red-600/20"
-                              >
-                                Delete
-                              </button>
-                            )}
-                          </div>
-                        </>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span
+                            className={`flex h-8 w-8 items-center justify-center rounded-full border ${
+                              todo.category
+                                ? `${categoryPillClass(todo.category)} text-lg`
+                                : 'border-gray-700 bg-gray-800/60 text-gray-400'
+                            }`}
+                            title={todo.category || 'Uncategorised'}
+                            aria-label={todo.category ? `Category ${todo.category}` : 'Uncategorised'}
+                          >
+                            <span className="text-xl leading-none">{categoryIcon(todo.category)}</span>
+                          </span>
+                          <span
+                            className={`flex items-center gap-1 px-2 py-0.5 rounded-full border ${
+                              overdue
+                                ? 'border-red-500 text-red-200'
+                                : 'border-gray-700 text-gray-300'
+                            }`}
+                          >
+                            <Icon name="calendar" className="h-3.5 w-3.5" />
+                            {dueLabel}
+                          </span>
+                          {hasNotes && <NotesPreview notes={todo.notes} />}
+                        </div>
                       )}
                     </div>
                   </div>
@@ -359,7 +430,6 @@ TodoList.propTypes = {
     }),
   ).isRequired,
   onToggleTodo: PropTypes.func.isRequired,
-  onRequestDelete: PropTypes.func.isRequired,
   onUpdateTodo: PropTypes.func.isRequired,
   onDeleteTodo: PropTypes.func.isRequired,
   categoryOptions: PropTypes.arrayOf(PropTypes.string).isRequired,

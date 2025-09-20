@@ -18,17 +18,17 @@ export function normalizePriority(priority) {
 export function priorityLabel(priority) {
   switch (normalizePriority(priority)) {
     case 'veryLow':
-      return '🌱 Very Low';
+      return 'Very Low';
     case 'low':
-      return '🧘 Low';
+      return 'Low';
     case 'medium':
-      return '⚖️ Medium';
+      return 'Medium';
     case 'high':
-      return '🔥 High';
+      return 'High';
     case 'urgent':
-      return '🚨 Urgent';
+      return 'Urgent';
     default:
-      return '⚖️ Medium';
+      return 'Medium';
   }
 }
 

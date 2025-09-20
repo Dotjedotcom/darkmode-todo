@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Icon from '@/components/Icon.jsx';
 import HeaderBar from './components/HeaderBar.jsx';
 import AddTodoForm from './components/AddTodoForm.jsx';
@@ -48,11 +48,9 @@ export default function TodoApp() {
   const [sortMode, setSortMode] = useState('default');
   const [confirmKind, setConfirmKind] = useState(null);
   const [pendingImport, setPendingImport] = useState(null);
-  const [pendingDelete, setPendingDelete] = useState(null);
   const [replaceOnImport, setReplaceOnImport] = useState(false);
   const [infoKind, setInfoKind] = useState(null);
   const [showUtilities, setShowUtilities] = useState(false);
-  const [showAdvanced, setShowAdvanced] = useState(true);
   const [busyAction, setBusyAction] = useState(null);
   const fileInputRef = useRef(null);
   const utilitiesToggleRef = useRef(null);
@@ -60,6 +58,24 @@ export default function TodoApp() {
   const [updateRegistration, setUpdateRegistration] = useState(null);
   const [showUpdateToast, setShowUpdateToast] = useState(false);
   const [installAvailable, setInstallAvailable] = useState(false);
+  const hasActiveFilters = filterStatus !== 'all' || filterCategories.length > 0;
+
+  const handleHideUtilities = useCallback(() => {
+    setFilterStatus('all');
+    setFilterCategories([]);
+    setShowUtilities(false);
+  }, [setFilterStatus, setFilterCategories]);
+
+  const handleToggleUtilities = useCallback(() => {
+    setShowUtilities((current) => {
+      if (current) {
+        setFilterStatus('all');
+        setFilterCategories([]);
+        return false;
+      }
+      return true;
+    });
+  }, [setFilterStatus, setFilterCategories]);
 
   useEffect(() => {
     let active = true;
@@ -87,8 +103,6 @@ export default function TodoApp() {
     try {
       const rawUtilities = window?.localStorage?.getItem('todos_showUtilities');
       if (rawUtilities != null) setShowUtilities(rawUtilities === '1' || rawUtilities === 'true');
-      const rawAdvanced = window?.localStorage?.getItem('todos_showAdvanced');
-      if (rawAdvanced != null) setShowAdvanced(rawAdvanced === '1' || rawAdvanced === 'true');
     } catch (error) {
       console.warn('Failed to read layout flags', error);
     }
@@ -103,15 +117,21 @@ export default function TodoApp() {
   }, [showUtilities, utilitiesPanelRef, utilitiesToggleRef]);
 
   useEffect(() => {
+    if (hasActiveFilters) {
+      setShowUtilities(true);
+    }
+  }, [hasActiveFilters]);
+
+  useEffect(() => {
     if (!showUtilities) return undefined;
 
     const handleClick = (event) => {
       if (utilitiesToggleRef.current?.contains(event.target)) return;
       if (utilitiesPanelRef.current?.contains(event.target)) return;
-      setShowUtilities(false);
+      handleHideUtilities();
     };
     const handleKey = (event) => {
-      if (event.key === 'Escape') setShowUtilities(false);
+      if (event.key === 'Escape') handleHideUtilities();
     };
 
     document.addEventListener('mousedown', handleClick);
@@ -120,7 +140,7 @@ export default function TodoApp() {
       document.removeEventListener('mousedown', handleClick);
       document.removeEventListener('keydown', handleKey);
     };
-  }, [showUtilities]);
+  }, [showUtilities, handleHideUtilities]);
 
   useEffect(() => {
     const unsubscribe = subscribeToServiceWorkerUpdate((registration) => {
@@ -137,14 +157,6 @@ export default function TodoApp() {
     });
     return unsubscribe;
   }, []);
-
-  useEffect(() => {
-    try {
-      window?.localStorage?.setItem('todos_showAdvanced', showAdvanced ? '1' : '0');
-    } catch (error) {
-      console.warn('Failed to persist advanced flag', error);
-    }
-  }, [showAdvanced]);
 
   const usedCategories = useMemo(() => {
     return Array.from(new Set(todos.map((todo) => (todo.category || '').trim()).filter(Boolean)));
@@ -323,12 +335,6 @@ export default function TodoApp() {
     } catch {
       /* error already surfaced */
     }
-  }
-
-  function requestDelete(todo) {
-    if (!todo || todo.completed) return;
-    setPendingDelete(todo);
-    setConfirmKind('deleteOne');
   }
 
   function triggerImport() {
@@ -518,8 +524,6 @@ export default function TodoApp() {
           const added = await replaceAllInStore(pendingImport);
           setInfoMsg(`Replaced with ${added.length} item(s).`);
         });
-      } else if (confirmKind === 'deleteOne' && pendingDelete) {
-        await handleDeleteTodo(pendingDelete.id);
       } else if (confirmKind === 'toggleAll') {
         await handleToggleAll();
       }
@@ -528,95 +532,96 @@ export default function TodoApp() {
     } finally {
       setConfirmKind(null);
       setPendingImport(null);
-      setPendingDelete(null);
     }
   }
 
   function closeConfirmDialog() {
     setConfirmKind(null);
     setPendingImport(null);
-    setPendingDelete(null);
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-gray-100 flex flex-col items-center p-6 overflow-hidden">
-      <h1 className="w-full max-w-3xl text-3xl font-extrabold tracking-tight mb-2">
-        <span className="bg-gradient-to-r from-gray-100 to-gray-400 bg-clip-text text-transparent">
-          😈 DarkTodos&trade;
-        </span>
-      </h1>
-      <HeaderBar
-        remainingCount={remainingCount}
-        totalCount={totalCount}
-        completedCount={completedCount}
-        onShare={shareList}
-        onExportJson={exportTodos}
-        onExportCsv={exportTodosCSV}
-        onTriggerImport={triggerImport}
-        replaceOnImport={replaceOnImport}
-        onReplaceOnImportChange={setReplaceOnImport}
-        onShowInfo={setInfoKind}
-        canInstall={installAvailable}
-        onInstallApp={handleInstallApp}
-        updateAvailable={!!updateRegistration}
-        onUpdateApp={handleApplyUpdate}
-      />
-      {!storageReady && (
-        <div
-          className="w-full max-w-3xl mb-3 px-4 py-2 rounded-xl border border-gray-800 bg-gray-800/70 text-sm text-gray-300"
-          role="status"
-        >
-          Loading your saved todos…
+    <div className="min-h-screen bg-gray-900 text-gray-100 flex flex-col overflow-hidden">
+      <header className="sticky top-0 z-30 border-b border-gray-800 bg-gray-900/95 backdrop-blur">
+        <div className="mx-auto w-full max-w-3xl px-6 py-6 flex flex-col gap-4">
+          <div className="flex flex-col gap-2">
+            <h1 className="text-3xl font-extrabold tracking-tight">
+              <span className="bg-gradient-to-r from-gray-100 to-gray-400 bg-clip-text text-transparent">
+                😈 DarkTodos&trade;
+              </span>
+            </h1>
+            <HeaderBar
+              remainingCount={remainingCount}
+              totalCount={totalCount}
+              completedCount={completedCount}
+              onShare={shareList}
+              onExportJson={exportTodos}
+              onExportCsv={exportTodosCSV}
+              onTriggerImport={triggerImport}
+              replaceOnImport={replaceOnImport}
+              onReplaceOnImportChange={setReplaceOnImport}
+              onShowInfo={setInfoKind}
+              canInstall={installAvailable}
+              onInstallApp={handleInstallApp}
+              updateAvailable={!!updateRegistration}
+              onUpdateApp={handleApplyUpdate}
+            />
+          </div>
+          {!storageReady && (
+            <div
+              className="w-full px-4 py-2 rounded-xl border border-gray-800 bg-gray-800/70 text-sm text-gray-300"
+              role="status"
+            >
+              Loading your saved todos…
+            </div>
+          )}
+          {storageReady && busyLabel && (
+            <div
+              className="w-full px-4 py-2 rounded-xl border border-blue-800 bg-blue-900/40 text-sm text-blue-200"
+              role="status"
+            >
+              {busyLabel}
+            </div>
+          )}
+          <AddTodoForm
+            onAdd={handleAddTodo}
+            categoryOptions={categoryOptions}
+            showUtilities={showUtilities}
+            onToggleUtilities={handleToggleUtilities}
+            utilitiesButtonRef={utilitiesToggleRef}
+            disabled={interactionsDisabled}
+            busyAction={busyAction}
+          />
+          <TodoUtilities
+            ref={utilitiesPanelRef}
+            visible={showUtilities}
+            totalCount={totalCount}
+            completedCount={completedCount}
+            onConfirmRequest={setConfirmKind}
+            onDismiss={handleHideUtilities}
+            search={search}
+            onSearchChange={setSearch}
+            filterStatus={filterStatus}
+            onFilterStatusChange={setFilterStatus}
+            sortMode={sortMode}
+            onSortModeChange={setSortMode}
+            categoryOptions={usedCategories}
+            selectedCategories={filterCategories}
+            onSelectedCategoriesChange={setFilterCategories}
+            onResetFilters={() => {
+              setFilterStatus('all');
+              setFilterCategories([]);
+            }}
+            disabled={interactionsDisabled}
+            busyAction={busyAction}
+          />
         </div>
-      )}
-      {storageReady && busyLabel && (
-        <div
-          className="w-full max-w-3xl mb-3 px-4 py-2 rounded-xl border border-blue-800 bg-blue-900/40 text-sm text-blue-200"
-          role="status"
-        >
-          {busyLabel}
-        </div>
-      )}
-      <AddTodoForm
-        onAdd={handleAddTodo}
-        categoryOptions={categoryOptions}
-        showAdvanced={showAdvanced}
-        onToggleAdvanced={() => setShowAdvanced((value) => !value)}
-        showUtilities={showUtilities}
-        onToggleUtilities={() => setShowUtilities((value) => !value)}
-        utilitiesButtonRef={utilitiesToggleRef}
-        disabled={interactionsDisabled}
-        busyAction={busyAction}
-      />
-      <div className="w-full max-w-3xl flex-1 min-h-0 flex flex-col gap-4 overflow-hidden">
-        <TodoUtilities
-          ref={utilitiesPanelRef}
-          visible={showUtilities}
-          totalCount={totalCount}
-          completedCount={completedCount}
-          onConfirmRequest={setConfirmKind}
-          onDismiss={() => setShowUtilities(false)}
-          search={search}
-          onSearchChange={setSearch}
-          filterStatus={filterStatus}
-          onFilterStatusChange={setFilterStatus}
-          sortMode={sortMode}
-          onSortModeChange={setSortMode}
-          categoryOptions={usedCategories}
-          selectedCategories={filterCategories}
-          onSelectedCategoriesChange={setFilterCategories}
-          onResetFilters={() => {
-            setFilterStatus('all');
-            setFilterCategories([]);
-          }}
-          disabled={interactionsDisabled}
-          busyAction={busyAction}
-        />
-        <div className="flex-1 min-h-0 overflow-hidden">
+      </header>
+      <main className="flex-1 min-h-0 overflow-hidden">
+        <div className="mx-auto h-full w-full max-w-3xl px-6 pb-24">
           <TodoList
             todos={sortedTodos}
             onToggleTodo={handleToggleTodo}
-            onRequestDelete={requestDelete}
             onUpdateTodo={handleUpdateTodo}
             onDeleteTodo={handleDeleteTodo}
             categoryOptions={categoryOptions}
@@ -624,7 +629,7 @@ export default function TodoApp() {
             busyAction={busyAction}
           />
         </div>
-      </div>
+      </main>
       {showUpdateToast && (
         <div className="fixed bottom-24 right-4 z-40">
           <div className="flex items-center gap-3 rounded-xl border border-blue-700 bg-gray-900/95 px-4 py-3 text-sm text-gray-100 shadow-2xl">
@@ -664,7 +669,6 @@ export default function TodoApp() {
         kind={confirmKind}
         completedCount={completedCount}
         pendingImport={pendingImport}
-        pendingDelete={pendingDelete}
         onCancel={closeConfirmDialog}
         onConfirm={handleConfirmAction}
         disabled={!!busyAction}
