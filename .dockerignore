@@ -6,11 +6,9 @@ dist
 Dockerfile
 npm-debug.log*
 pnpm-lock.yaml
-yarn.lock
 .vscode
 .idea
 .DS_Store
 .env
 .env.*
 coverage
-
