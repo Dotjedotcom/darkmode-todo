@@ -322,9 +322,13 @@ export default function TodoList({
                                 : 'border-gray-700 bg-gray-800/60 text-gray-400'
                             }`}
                             title={todo.category || 'Uncategorised'}
-                            aria-label={todo.category ? `Category ${todo.category}` : 'Uncategorised'}
+                            aria-label={
+                              todo.category ? `Category ${todo.category}` : 'Uncategorised'
+                            }
                           >
-                            <span className="text-xl leading-none">{categoryIcon(todo.category)}</span>
+                            <span className="text-xl leading-none">
+                              {categoryIcon(todo.category)}
+                            </span>
                           </span>
                           <span
                             className={`flex items-center gap-1 px-2 py-0.5 rounded-full border ${

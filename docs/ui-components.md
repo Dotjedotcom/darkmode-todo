@@ -30,24 +30,24 @@ The form calls `onAdd` with `{ text, category, dueInput, priority }`. Consumers 
 
 ## `<TodoList />`
 
-| Prop                                                              | Type                                             | Description                                                        |
-| ----------------------------------------------------------------- | ------------------------------------------------ | ------------------------------------------------------------------ |
-| `todos`                                                           | `TodoItem[]`                                     | Render payload (same structure as the store).                      |
+| Prop                                           | Type                                             | Description                                                        |
+| ---------------------------------------------- | ------------------------------------------------ | ------------------------------------------------------------------ |
+| `todos`                                        | `TodoItem[]`                                     | Render payload (same structure as the store).                      |
 | `onToggleTodo`, `onUpdateTodo`, `onDeleteTodo` | Callback hooks triggered from the list controls. |
-| `categoryOptions`                                                 | `string[]`                                       | Provides suggestions when editing a todo.                          |
-| `disabled`                                                        | `bool`                                           | Disables inline editing and toggles.                               |
-| `busyAction`                                                      | `string`                                         | Allows the list to expose `aria-busy` while mutations are pending. |
+| `categoryOptions`                              | `string[]`                                       | Provides suggestions when editing a todo.                          |
+| `disabled`                                     | `bool`                                           | Disables inline editing and toggles.                               |
+| `busyAction`                                   | `string`                                         | Allows the list to expose `aria-busy` while mutations are pending. |
 
 ## `<ConfirmDialog />`
 
-| Prop                    | Type                                                   | Description                                                                           |
-| ----------------------- | ------------------------------------------------------ | ------------------------------------------------------------------------------------- |
-| `open`                  | `bool`                                                 | Controls visibility.                                                                  |
-| `kind`                  | `'clearAll' \| 'clearCompleted' \| 'importReplace' \| 'toggleAll' \| null` | Chooses the message and confirm label. |
-| `completedCount`        | `number`                                               | Used to disable the "clear completed" confirmation when there are no completed items. |
-| `pendingImport`         | `TodoItem[] \| null`                                   | Payload used to render contextual text.                                               |
-| `onCancel`, `onConfirm` | `() => void`                                           | Action callbacks.                                                                      |
-| `disabled`              | `bool`                                                 | Prevents double submissions while an async action is already underway.                |
+| Prop                    | Type                                                                       | Description                                                                           |
+| ----------------------- | -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| `open`                  | `bool`                                                                     | Controls visibility.                                                                  |
+| `kind`                  | `'clearAll' \| 'clearCompleted' \| 'importReplace' \| 'toggleAll' \| null` | Chooses the message and confirm label.                                                |
+| `completedCount`        | `number`                                                                   | Used to disable the "clear completed" confirmation when there are no completed items. |
+| `pendingImport`         | `TodoItem[] \| null`                                                       | Payload used to render contextual text.                                               |
+| `onCancel`, `onConfirm` | `() => void`                                                               | Action callbacks.                                                                     |
+| `disabled`              | `bool`                                                                     | Prevents double submissions while an async action is already underway.                |
 
 Each dialog and form is kept framework-agnostic (plain props, no hook dependencies) so they can be rendered in Storybook or tested in isolation.
 
