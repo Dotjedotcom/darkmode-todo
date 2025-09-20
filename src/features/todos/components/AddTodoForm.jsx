@@ -24,14 +24,16 @@ export default function AddTodoForm({
   const [priority, setPriority] = useState('medium');
   const [notes, setNotes] = useState('');
   const inputRef = useRef(null);
+  const hasFocusedOnceRef = useRef(false);
 
   useEffect(() => {
     setDue(defaultDateLocal());
   }, []);
 
   useEffect(() => {
-    if (!disabled) {
+    if (!disabled && !hasFocusedOnceRef.current) {
       inputRef.current?.focus();
+      hasFocusedOnceRef.current = true;
     }
   }, [disabled]);
 

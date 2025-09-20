@@ -3,35 +3,37 @@
 IMAGE ?= darkmode-todo
 
 install:
-	npm i
+	yarn install
 
-dev: install
-	npm run dev
+i: install
+
+dev: i
+	yarn dev
 
 build:
-	npm run build
+	yarn build
 
 preview:
-	npm run preview
+	yarn preview
 
 format:
-	npm run format
+	yarn format
 
 f: format
 
 ff:
-	npm run format:fix
+	yarn format:fix
 
 lint:
-	npm run lint
+	yarn lint
 
 l: lint
 	
 lf:
-	npm run lint:fix
+	yarn lint:fix
 
 test:
-	npm run test
+	yarn test
 
 t: test
 
@@ -46,4 +48,3 @@ docker/build:
 
 docker/run:
 	docker run -p 8080:80 $(IMAGE)
-

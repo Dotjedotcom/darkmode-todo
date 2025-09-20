@@ -1,0 +1,12 @@
+diff --git a/source/index.js b/source/index.js
+index 75ec66350527a8f4040671c72760238e6d80b976..0690af6f56920242f6f863097d39551e35040a22 100644
+--- a/source/index.js
++++ b/source/index.js
+@@ -1,5 +1,6 @@
+ 'use strict';
+-const ansiStyles = require('ansi-styles');
++const ansiStylesImport = require('ansi-styles');
++const ansiStyles = ansiStylesImport.default ?? ansiStylesImport;
+ const {stdout: stdoutColor, stderr: stderrColor} = require('supports-color');
+ const {
+ 	stringReplaceAll,

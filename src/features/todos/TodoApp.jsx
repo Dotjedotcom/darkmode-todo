@@ -541,7 +541,10 @@ export default function TodoApp() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-gray-100 flex flex-col overflow-hidden">
+    <div
+      className="flex min-h-screen flex-col overflow-hidden bg-gray-900 text-gray-100"
+      style={{ minHeight: '100dvh' }}
+    >
       <header className="sticky top-0 z-30 border-b border-gray-800 bg-gray-900/95 backdrop-blur">
         <div className="mx-auto w-full max-w-3xl px-6 py-6 flex flex-col gap-4">
           <div className="flex flex-col gap-2">
@@ -618,16 +621,18 @@ export default function TodoApp() {
         </div>
       </header>
       <main className="flex-1 min-h-0 overflow-hidden">
-        <div className="mx-auto h-full w-full max-w-3xl px-6 pb-24">
-          <TodoList
-            todos={sortedTodos}
-            onToggleTodo={handleToggleTodo}
-            onUpdateTodo={handleUpdateTodo}
-            onDeleteTodo={handleDeleteTodo}
-            categoryOptions={categoryOptions}
-            disabled={interactionsDisabled}
-            busyAction={busyAction}
-          />
+        <div className="mx-auto box-border flex h-full w-full max-w-3xl flex-col px-6 pt-4 pb-3">
+          <div className="flex-1 min-h-0">
+            <TodoList
+              todos={sortedTodos}
+              onToggleTodo={handleToggleTodo}
+              onUpdateTodo={handleUpdateTodo}
+              onDeleteTodo={handleDeleteTodo}
+              categoryOptions={categoryOptions}
+              disabled={interactionsDisabled}
+              busyAction={busyAction}
+            />
+          </div>
         </div>
       </main>
       {showUpdateToast && (
