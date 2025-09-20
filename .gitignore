@@ -48,3 +48,12 @@ Thumbs.db
 .docker/
 docker-compose.override.yml
 
+
+# Yarn Berry
+.yarn/*
+!.yarn/install-state.gz
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+!.yarn/patches
